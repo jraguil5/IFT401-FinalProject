@@ -7,3 +7,5 @@ Stock Market app.
 
 
 Hello, World!
+
+My name Richard. 
