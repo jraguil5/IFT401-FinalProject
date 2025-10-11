@@ -16,8 +16,19 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from customer.views import PortfolioViewSet, StockViewSet
+
+router = DefaultRouter()
+router.register(r'stocks', StockViewSet, basename="stock")
+router.register(r'portfolio', PortfolioViewSet, basename="portfolio")
+# You will add authentication endpoints later (djoser/DRF simplejwt)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v1/", include(router.urls)),  # /api/v1/stocks/, /api/v1/portfolio/
+    path("api-auth/", include('rest_framework.urls')), # DRF Login/Logout
+    # Add user authorization path here 
 ]
+
