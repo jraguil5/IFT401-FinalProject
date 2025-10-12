@@ -1,6 +1,6 @@
 -- Create the database
-CREATE DATABASE IF NOT EXISTS investrio;
-USE investrio;
+CREATE DATABASE IF NOT EXISTS `investrio-dev-db`;
+USE `investrio-dev-db`;
 
 -- User table
 CREATE TABLE User (
