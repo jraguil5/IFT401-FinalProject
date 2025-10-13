@@ -84,10 +84,10 @@ WSGI_APPLICATION = "investr.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",  
-        "NAME": "investriodb",
+        "NAME": "investrio-dev-db",
         "USER": "admin",
         "PASSWORD": config("DB_PASSWORD"),
-        "HOST": "investrio-dev-db.cu5mgcywcnjd.us-east-1.rds.amazonaws.com",       # e.g., investr-db.xyz.rds.amazonaws.com
+        "HOST": "investrio-dev-db.cu5mgcywcnjd.us-east-1.rds.amazonaws.com",     
         "PORT": "3306",                        
     }
 }
@@ -156,6 +156,8 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
     "VERIFYING_KEY": None,
     "AUTH_HEADER_TYPES": ("Bearer",),
-    "USER_ID_FIELD": "id",
+    "USER_ID_FIELD": "UserID",
     "USER_ID_CLAIM": "user_id",
 }
+
+AUTH_USER_MODEL = "customer.CustomUser"

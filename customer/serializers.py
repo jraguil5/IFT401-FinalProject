@@ -1,32 +1,32 @@
 #convert data into readable JSON for API communication
 from rest_framework import serializers
-from .models import Portfolio, Transaction, Stock, Holding
 from django.contrib.auth import get_user_model
+from .models import BrokerageAccount, Transaction, Stock, Position 
 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email')
+        fields = ('UserID', 'UserName', 'Email', 'FullName') 
 
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = '__all__'
 
-class HoldingSerializer(serializers.ModelSerializer):
+class PositionSerializer(serializers.ModelSerializer):
     stock_ticker = serializers.ReadOnlyField(source='stock.ticker')
     class Meta:
-        model = Holding
+        model = Position
         fields = ['id', 'stock_ticker', 'quantity']
 
-class PortfolioSerializer(serializers.ModelSerializer):
-    holdings = HoldingSerializer(many=True, read_only=True)
+class BrokerageAccountSerializer(serializers.ModelSerializer):
+    positions = PositionSerializer(many=True, read_only=True, source='positions') 
     user = UserSerializer(read_only=True)
     class Meta:
-        model = Portfolio
-        fields = ['id', 'user', 'cash_balance', 'holdings']
+        model = BrokerageAccount
+        fields = ['user', 'cash_balance', 'positions']
 
 class TransactionSerializer(serializers.ModelSerializer):
     stock_ticker = serializers.ReadOnlyField(source='stock.ticker')
