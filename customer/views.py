@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from .models import BrokerageAccount, Transaction, Stock
 from .serializers import BrokerageAccountSerializer, TransactionSerializer, StockSerializer 
 
+def dashboard_view(request):
+    """Renders the main trading dashboard template."""
+    return render(request, 'customer/dashboard.html')
 
 class StockViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint for listing and retrieving stock information."""
