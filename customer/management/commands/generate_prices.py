@@ -1,60 +1,71 @@
 import random
+from decimal import Decimal, ROUND_HALF_UP
 from django.core.management.base import BaseCommand
 from django.db import transaction, models
-from decimal import Decimal, ROUND_HALF_UP
-
-# Import your models
 from customer.models import Stock, PriceTick 
 
 class Command(BaseCommand):
-    help = 'Generates new random stock prices for all stocks and creates a PriceTick record.'
+    help = "Randomly adjust stock prices and create a corresponding PriceTick entry for each."
 
     def handle(self, *args, **options):
-        # All database operations must be inside the transaction block
-        with transaction.atomic(): 
-            stocks = Stock.objects.all()
-            
-            if not stocks:
-                self.stdout.write(self.style.WARNING("No stocks found to update. Please add initial stock data."))
-                return # Exit the command if no stocks are found
+    # Wrapping in a transaction to keep everything consistent in case something blows up halfway
+    with transaction.atomic():
+        stocks = Stock.objects.all()
 
-            try:
-                # Find the current maximum TickID in the table using the imported 'models'
-                max_tick_id = PriceTick.objects.all().aggregate(models.Max('id'))['id__max']
-                # Start the sequence one greater than the max ID, or a high default if the table is empty
-                next_id = (max_tick_id or 5000000000) + 1 
-            except Exception as e:
-                # Fallback and logging for integrity/connection issues
-                self.stderr.write(self.style.ERROR(f"Error determining max TickID: {e}. Using default start ID."))
-                next_id = 5000000001
-
-            new_price_ticks = []
-            
-            for stock in stocks:
-                current_price = stock.current_price
-                
-                # Generate a small, random change percentage 
-                change_percent = Decimal(random.uniform(-0.005, 0.005))
-                new_price = current_price * (1 + change_percent)
-                
-                # Ensure price is non-negative and round to 2 decimal places
-                new_price = max(new_price, Decimal('0.01')).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
-                
-                # Update Stock Record (Saves immediately within the atomic block)
-                stock.current_price = new_price
-                stock.save()
-                
-                tick = PriceTick(
-                    id=next_id,         
-                    stock=stock,
-                    price=new_price
-                )
-                new_price_ticks.append(tick)
-                next_id += 1 
-                
-            # Bulk create all PriceTick records
-            PriceTick.objects.bulk_create(new_price_ticks)
-            
-            self.stdout.write(self.style.SUCCESS(
-                f'Successfully updated prices for {len(stocks)} stocks and created {len(new_price_ticks)} price ticks (IDs {next_id - len(stocks)} to {next_id - 1}).'
+        if not stocks.exists():
+            self.stdout.write(self.style.WARNING(
+                "No stocks found in the database. Maybe you forgot to seed the initial data?"
             ))
+            return
+
+        # Try to grab the latest tick ID
+        try:
+            last_tick = PriceTick.objects.aggregate(models.Max("id"))["id__max"]
+            # Arbitrary large base number to avoid overlapping with external data
+            next_tick_id = (last_tick or 5000000000) + 1
+        except Exception as err:
+            self.stderr.write(self.style.ERROR(
+                f"Could not fetch max tick ID due to error: {err}. Falling back to default ID start."
+            ))
+            next_tick_id = 5000000001
+
+        created_ticks = []  # list to hold new PriceTick objects
+
+        # Loop through stocks and tweak their prices just a bit
+        for stock in stocks:
+            # Probably not the most realistic randomization logic, but it works fine for demo/testing
+            current_price = stock.current_price
+            change_factor = Decimal(random.uniform(-0.005, 0.005))  # +/- 0.5%
+            new_price = current_price * (1 + change_factor)
+
+            # Prevent weird negative prices, and round to 2 decimal places (normal bank rounding)
+            new_price = max(new_price, Decimal("0.01")).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+
+            # Update the stock’s price (bulk_update might be faster, but readability > speed here)
+            stock.current_price = new_price
+            stock.save()
+
+            # Create tick entry
+            tick = PriceTick(
+                id=next_tick_id,
+                stock=stock,
+                price=new_price
+            )
+            created_ticks.append(tick)
+            next_tick_id += 1  # manually increment to keep IDs sequential
+
+            # TODO: maybe add some volatility patterns later (e.g., trending prices)
+
+        # Do all DB inserts in one go to keep it efficient enough
+        if created_ticks:
+            PriceTick.objects.bulk_create(created_ticks)
+
+        # Output a nice little summary — I like having feedback even for automated jobs
+        first_id = next_tick_id - len(created_ticks)
+        last_id = next_tick_id - 1
+        self.stdout.write(self.style.SUCCESS(
+            f"Updated {len(stocks)} stocks and created {len(created_ticks)} PriceTicks "
+            f"(IDs {first_id} to {last_id})."
+        ))
+
+        # Note: Might want to log this to a file instead of stdout eventually.

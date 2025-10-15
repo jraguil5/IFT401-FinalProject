@@ -1,21 +1,21 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin 
-from django.utils.translation import gettext_lazy as _
 
 
-# ==============================================================================
-# 1. Custom User Manager
-# ==============================================================================
+# ------------------------------------------------------------------------------
+# Custom User Manager
+# ------------------------------------------------------------------------------
 
 class CustomUserManager(BaseUserManager): 
-    
+    """ The section overrides the Default Methods, so we can use UserName as our database feild """
     def create_user(self, UserName, email, FullName, Role, password=None, **extra_fields):
+        """ Creates the user and saves """
         if not UserName:
-            raise ValueError(_('The given UserName must be set'))
+            raise ValueError('The given UserName must be set')
         if not email:
-            raise ValueError(_('The given email must be set'))
+            raise ValueError('The given email must be set')
         
-        normalized_role = Role.upper()
+        normalized_role = Role.upper() #passes role to database correctly
         
         # Instantiate the model
         user = self.model(
@@ -26,7 +26,7 @@ class CustomUserManager(BaseUserManager):
             **extra_fields 
         )
         
-        user.set_password(password)
+        user.set_password(password) #hashing password
         
         user.save(using=self._db)
         return user
@@ -52,7 +52,7 @@ class CustomUserManager(BaseUserManager):
         )
 
 # ------------------------------------------------------------------------------
-# 2. Custom User Model
+# Custom User Model
 # ------------------------------------------------------------------------------
 
 
@@ -63,15 +63,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     UserName = models.CharField(db_column='UserName', unique=True, max_length=50, blank=True, null=True)
     email = models.EmailField(db_column='Email', unique=True, max_length=100, blank=True, null=True)
     password = models.CharField(db_column='PasswordHash', max_length=255) 
-    last_login = models.DateTimeField(_('last login'), blank=True, null=True)
+    last_login = models.DateTimeField('last login', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False) 
     
-    ROLE_CHOICES = [("CUSTOMER", "Customer"), ("ADMIN", "Admin")]
-    Role = models.CharField(db_column='Role', max_length=20, 
-                            choices=ROLE_CHOICES, 
-                            default="CUSTOMER", blank=True, null=True)
+    ROLE_CHOICES = [('CUSTOMER', 'Customer'), ('ADMIN', 'Admin')]
+    Role = models.CharField(db_column='Role', max_length=20, default="CUSTOMER", blank=True, null=True)
 
 
     USERNAME_FIELD = 'UserName'
@@ -95,7 +93,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
          return self.UserName or str(self.UserID)
 
 # ------------------------------------------------------------------------------
-# 3. Stock Model
+# Stock Model
 # ------------------------------------------------------------------------------
 
 class Stock(models.Model):
@@ -117,7 +115,7 @@ class Stock(models.Model):
         return self.ticker
 
 # ------------------------------------------------------------------------------
-# 4. Brokerage Account Model
+# Brokerage Account Model
 # ------------------------------------------------------------------------------
 
 class BrokerageAccount(models.Model):
@@ -140,7 +138,7 @@ class BrokerageAccount(models.Model):
         managed = False
 
 # ------------------------------------------------------------------------------
-# 5. Price Tick Model
+# Price Tick Model
 # ------------------------------------------------------------------------------
 
 class PriceTick(models.Model):
@@ -155,7 +153,7 @@ class PriceTick(models.Model):
         ordering = ['-timestamp'] 
 
 # ------------------------------------------------------------------------------
-# 6. Position Model
+# Position Model
 # ------------------------------------------------------------------------------
 
 class Position(models.Model):
@@ -170,7 +168,7 @@ class Position(models.Model):
         unique_together = ("account", "stock")
 
 # ------------------------------------------------------------------------------
-# 7. Transaction Model
+# Transaction Model
 # ------------------------------------------------------------------------------
 
 class Transaction(models.Model):
@@ -185,7 +183,7 @@ class Transaction(models.Model):
         managed = False
 
 # ------------------------------------------------------------------------------
-# 8. Order Model
+# Order Model
 # ------------------------------------------------------------------------------
 
 class Order(models.Model):
@@ -205,7 +203,7 @@ class Order(models.Model):
         managed = False
 
 # ------------------------------------------------------------------------------
-# 9. Trade Model
+# Trade Model
 # ------------------------------------------------------------------------------
 
 class Trade(models.Model):
@@ -220,7 +218,7 @@ class Trade(models.Model):
         managed = False
 
 # ------------------------------------------------------------------------------
-# 10. Market Schedule Model
+# Market Schedule Model
 # ------------------------------------------------------------------------------
 
 class MarketSchedule(models.Model):
