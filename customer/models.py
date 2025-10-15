@@ -15,16 +15,10 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The given email must be set')
         
-        normalized_role = Role.upper() #passes role to database correctly
+        normalized_role = Role.upper() #passes role to database correctly as full uppercase
         
         # Instantiate the model
-        user = self.model(
-            UserName=UserName,
-            email=self.normalize_email(email), 
-            FullName=FullName,
-            Role=normalized_role,
-            **extra_fields 
-        )
+        user = self.model(UserName=UserName, email=self.normalize_email(email), FullName=FullName, Role=normalized_role, **extra_fields)
         
         user.set_password(password) #hashing password
         
@@ -42,14 +36,7 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
             
-        return self.create_user( 
-            UserName, 
-            email,
-            FullName,
-            Role,
-            password,
-            **extra_fields
-        )
+        return self.create_user(UserName, email, FullName, Role, password, **extra_fields)
 
 # ------------------------------------------------------------------------------
 # Custom User Model
@@ -57,12 +44,13 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin): 
-    # Field definitions matching external MySQL schema
+    # Needed to updated the field definitions to match match external MySQL schema
     UserID = models.BigIntegerField(db_column='UserID', primary_key=True)
     FullName = models.CharField(db_column='FullName', max_length=100, blank=True, null=True)
     UserName = models.CharField(db_column='UserName', unique=True, max_length=50, blank=True, null=True)
     email = models.EmailField(db_column='Email', unique=True, max_length=100, blank=True, null=True)
     password = models.CharField(db_column='PasswordHash', max_length=255) 
+
     last_login = models.DateTimeField('last login', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
