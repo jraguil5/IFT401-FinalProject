@@ -1,0 +1,1 @@
+// customer/static/js/main.js
