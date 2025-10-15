@@ -15,7 +15,6 @@ class StockViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StockSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
 class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint for listing and retrieving the user's brokerage account/cash balance."""
     serializer_class = BrokerageAccountSerializer
