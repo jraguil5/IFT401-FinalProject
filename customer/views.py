@@ -29,7 +29,7 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
         data = request.data
         user_account = self.get_queryset().first() 
 
-        # 1. Validate Inputs (stock_ticker, quantity, type)
+        #Validate Inputs (stock_ticker, quantity, type)
         try:
             stock = Stock.objects.get(ticker=data.get('ticker'))
             quantity = int(data.get('quantity'))
@@ -37,10 +37,9 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
         except (Stock.DoesNotExist, ValueError):
             return Response({"error": "Invalid input."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2. Get Real-Time Price (Requires Generator App/API Integration)
         # current_price = get_stock_price(stock.ticker) 
 
-        # 3. Execute Transaction Logic (Buy/Sell)
+        # Execute Transaction Logic (Buy/Sell)
         if trade_type == 'BUY':
             return Response({"message": f"Successfully processed BUY order for {quantity} shares of {stock.ticker}."}, status=status.HTTP_200_OK)
         elif trade_type == 'SELL':
