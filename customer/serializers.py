@@ -32,7 +32,6 @@ class BrokerageAccountSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ['id', 'account', 'transaction_type', 'price_at_transaction']
-        read_only_fields = ('price_at_transaction',)
+        fields = ['id', 'account', 'transaction_type', 'amount']
         
         
