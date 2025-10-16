@@ -8,7 +8,7 @@ class Command(BaseCommand):
     help = "Randomly adjust stock prices and create a corresponding PriceTick entry for each."
 
     def handle(self, *args, **options):
-    # Wrapping in a transaction to keep everything consistent in case something blows up halfway
+    
     with transaction.atomic():
         stocks = Stock.objects.all()
 

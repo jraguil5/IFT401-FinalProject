@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager): 
-    """ The section overrides the Default Methods, so we can use UserName as our database feild """
     def create_user(self, UserName, email, FullName, Role, password=None, **extra_fields):
         """ Creates the user and saves """
         if not UserName:
@@ -11,7 +10,7 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError('The given email must be set')
         
-        normalized_role = Role.upper() #passes role to database correctly as full uppercase
+        normalized_role = Role.upper() # DB expects uppercase roles
         
         # Instantiate the model
         user = self.model(UserName=UserName, email=self.normalize_email(email), FullName=FullName, Role=normalized_role, **extra_fields)
@@ -36,7 +35,6 @@ class CustomUserManager(BaseUserManager):
 
 # Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin): 
-    """ This section helps to define the specific user being added """
     # Needed to updated the field definitions to match match external MySQL schema
     UserID = models.BigIntegerField(db_column='UserID', primary_key=True)
     FullName = models.CharField(db_column='FullName', max_length=100, blank=True, null=True)
@@ -75,9 +73,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 # Stock Model
 class Stock(models.Model):
-    """ The section defines the Stock model """
     # Needed to updated the field definitions to match match external MySQL schema
-
     id = models.BigIntegerField(primary_key=True, db_column='StockID')
     ticker = models.CharField(max_length=10, unique=True, db_column='Ticker')
     name = models.CharField(max_length=100, db_column='CompanyName')
@@ -98,9 +94,7 @@ class Stock(models.Model):
 
 # Brokerage Account Model
 class BrokerageAccount(models.Model):
-    """ The section defines the Brokerage Account model """
     # Needed to updated the field definitions to match match external MySQL schema
-
     AccountID = models.BigIntegerField(primary_key=True, db_column='AccountID')
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="account", db_column='UserID') #when user us deleted corresponding Brokerage account will all be removed (CASCADE)
     cash_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, db_column='Balance')
@@ -112,8 +106,6 @@ class BrokerageAccount(models.Model):
 
 # Price Tick Model
 class PriceTick(models.Model):
-     """ The section defines the Price Tick model """
-
     id = models.BigIntegerField(primary_key=True, db_column='TickID') 
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='price_ticks', db_column='StockID')
     timestamp = models.DateTimeField(auto_now_add=True, db_column='Timestamp')
@@ -127,8 +119,6 @@ class PriceTick(models.Model):
 
 # Position Model
 class Position(models.Model):
-     """ The section defines the Position model """
-
     id = models.BigIntegerField(primary_key=True, db_column='PositionID')
     account = models.ForeignKey(BrokerageAccount, on_delete=models.CASCADE, related_name="positions", db_column='AccountID')
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE, db_column='StockID')

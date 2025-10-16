@@ -6,17 +6,14 @@ from .models import BrokerageAccount, Transaction, Stock
 from .serializers import BrokerageAccountSerializer, TransactionSerializer, StockSerializer 
 
 def dashboard_view(request):
-    """Renders the main trading dashboard template."""
     return render(request, 'customer/dashboard.html')
 
 class StockViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for listing and retrieving stock information."""
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint for listing and retrieving the user's brokerage account/cash balance."""
     serializer_class = BrokerageAccountSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -25,7 +22,6 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'])
     def trade(self, request):
-        """Custom endpoint to handle buy and sell transactions."""
         data = request.data
         user_account = self.get_queryset().first() 
 
