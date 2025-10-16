@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin 
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager): 
@@ -89,7 +89,7 @@ class Stock(models.Model):
 # Brokerage Account Model
 class BrokerageAccount(models.Model):
     AccountID = models.BigIntegerField(primary_key=True, db_column='AccountID')
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID') # Cascades on user delete
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID') # Cascades on user delete
     cash_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, db_column='Balance')
     
     class Meta:
@@ -125,7 +125,7 @@ class Position(models.Model):
 
 # Transaction Model
 class Transaction(models.Model):
-    TRANSACTION_TYPES = [('BUY', 'Buy'), ('SELL', 'Sell')]
+    TRANSACTION_TYPES = [('DEPOSIT', 'Deposit'), ('WITHDRAW', 'Withdraw')]
 
     id = models.BigIntegerField(primary_key=True, db_column='TransactionID')
     account = models.ForeignKey(BrokerageAccount, on_delete=models.CASCADE, related_name='transactions', db_column='AccountID')
@@ -172,7 +172,6 @@ class Trade(models.Model):
 
 # Market Schedule Model
 class MarketSchedule(models.Model):
-    ScheduleID = models.BigIntegerField(primary_key=True, db_column='ScheduleID') 
     status = models.CharField(max_length=10, db_column='Status')
     open_hour = models.IntegerField(db_column='OpenHour')
     open_minute = models.IntegerField(db_column='OpenMinute')

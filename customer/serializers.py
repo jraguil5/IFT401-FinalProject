@@ -8,7 +8,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('UserID', 'UserName', 'Email', 'FullName')
+        fields = ('UserID', 'UserName', 'email', 'FullName')
 
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,7 +16,8 @@ class StockSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PositionSerializer(serializers.ModelSerializer):
-    stock_ticker = serializers.ReadOnlyField(source='stock.ticker') 
+    stock_ticker = serializers.CharField(source='stock.ticker') 
+    
     class Meta:
         model = Position
         fields = ['id', 'stock_ticker', 'quantity']
