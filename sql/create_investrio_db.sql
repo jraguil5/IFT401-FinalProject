@@ -88,6 +88,9 @@ CREATE TABLE PriceTick (
 
 -- MarketSchedule table
 CREATE TABLE MarketSchedule (
+    -- Add ScheduleID as the Primary Key
+    ScheduleID BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    
     Status VARCHAR(20), -- Values: Open, Closed
     OpenHour INT,
     OpenMinute INT,

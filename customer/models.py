@@ -89,7 +89,7 @@ class Stock(models.Model):
 # Brokerage Account Model
 class BrokerageAccount(models.Model):
     AccountID = models.BigIntegerField(primary_key=True, db_column='AccountID')
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID') # Cascades on user delete
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID') # Cascades on user delete
     cash_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, db_column='Balance')
     
     class Meta:
@@ -172,6 +172,7 @@ class Trade(models.Model):
 
 # Market Schedule Model
 class MarketSchedule(models.Model):
+    ScheduleID = models.BigIntegerField(primary_key=True, db_column='ScheduleID')
     status = models.CharField(max_length=10, db_column='Status')
     open_hour = models.IntegerField(db_column='OpenHour')
     open_minute = models.IntegerField(db_column='OpenMinute')

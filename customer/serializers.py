@@ -1,7 +1,6 @@
-#convert data into readable JSON for API communication
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import BrokerageAccount, Transaction, Stock, Position
+from .models import BrokerageAccount, Transaction, Stock, Position, Order, Trade, MarketSchedule
 
 User = get_user_model()
 
@@ -10,20 +9,20 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('UserID', 'UserName', 'email', 'FullName')
 
-class StockSerializer(serializers.ModelSerializer):
+class StockSerializer(serializers.ModelSerializer): 
     class Meta:
         model = Stock
         fields = '__all__'
 
 class PositionSerializer(serializers.ModelSerializer):
     stock_ticker = serializers.CharField(source='stock.ticker') 
-    
+
     class Meta:
         model = Position
         fields = ['id', 'stock_ticker', 'quantity']
 
 class BrokerageAccountSerializer(serializers.ModelSerializer):
-    positions = PositionSerializer(many=True, read_only=True, source='positions') 
+    positions = PositionSerializer(many=True, read_only=True)
     user = UserSerializer(read_only=True)
     
     class Meta:
@@ -35,4 +34,21 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = ['id', 'account', 'transaction_type', 'amount']
         
-        
+class OrderSerializer(serializers.ModelSerializer):
+    stock_ticker = serializers.CharField(source='stock.ticker')
+    class Meta:
+        model = Order
+        fields = ['id', 'account', 'stock_ticker', 'action', 'quantity', 'status', 'created_at', 'executed_at']
+
+class TradeSerializer(serializers.ModelSerializer):
+    order_id = serializers.IntegerField(source='order.id')
+    stock_ticker = serializers.CharField(source='order.stock.ticker')
+    
+    class Meta:
+        model = Trade
+        fields = ['id', 'order_id', 'stock_ticker', 'executed_price', 'executed_qty', 'executed_time']
+
+class MarketScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarketSchedule
+        fields = ['schedule_id','status', 'open_hour', 'open_minute', 'close_hour', 'close_minute', 'holiday']

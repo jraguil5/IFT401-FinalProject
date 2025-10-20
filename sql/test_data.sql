@@ -73,6 +73,6 @@ VALUES
 
 -- Market Schedule
 
-INSERT INTO MarketSchedule (Status, OpenHour, OpenMinute, CloseHour, CloseMinute, Holiday)
+INSERT INTO MarketSchedule (ScheduleId, Status, OpenHour, OpenMinute, CloseHour, CloseMinute, Holiday)
 VALUES
 ('Open', 9, 30, 16, 0, FALSE);
