@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sell Stock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Reuse same stylesheet -->
+  <link rel="stylesheet" href="css/portfolio.css" />
+
+  <style>
+    /* Page-specific tweaks (everything else comes from portfolio.css) */
+    .sell-card{
+      max-width: 640px;
+      margin: 24px auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+      padding: 24px;
+    }
+    .sell-card h2 { margin: 0 0 16px; }
+
+    .field{ margin-bottom:16px; }
+    .field label{ display:block; font-weight:600; margin-bottom:6px; }
+
+    .select, .input{
+      width:100%;
+      padding:12px 14px;
+      border:1px solid #cbd5e1;
+      border-radius:8px;
+      background: var(--surface);
+      outline:none;
+      transition: box-shadow .15s, border-color .15s;
+      font-size:1rem;
+      box-sizing:border-box;
+    }
+    .select:focus, .input:focus{ border-color: var(--primary); box-shadow:0 0 0 3px var(--ring); }
+
+    .numbers{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin:8px 0 12px; }
+    .meta{ color: var(--muted); }
+    .strong{ font-weight:700; color:#0f172a; }
+
+    .btn{
+      width:100%;
+      padding:12px 16px;
+      background: var(--primary);
+      color:#fff;
+      border:0;
+      border-radius:8px;
+      font-weight:700;
+      cursor:pointer;
+      transition: background .15s, opacity .15s, transform .02s;
+    }
+    .btn:hover{ background: var(--primary-600); }
+    .btn:active{ transform: translateY(1px); }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+    .warn{
+      margin-top:12px;
+      color:#b91c1c;
+      background:#fee2e2;
+      border:1px solid #fecaca;
+      padding:10px 12px;
+      border-radius:8px;
+      display:none;
+    }
+  </style>
+</head>
+
+<body class="portfolio">
+  <!-- Same header as other pages -->
+  <header class="site-header">
+    <div class="brand">
+      <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo" />
+      <span class="brand-text">Sell Stock</span>
+    </div>
+    <nav class="nav">
+      <a href="portfolio.html">Portfolio</a>
+      <a href="buy_stock.html">Buy Stock</a>
+      <a href="sell_stock.html" class="active">Sell Stock</a>
+      <a href="#">Deposit Cash</a>
+      <a href="#">Withdraw Cash</a>
+      <a href="sign_in.html">Logout</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="sell-card">
+      <h2>Sell Stock</h2>
+
+      <div class="field">
+        <label for="stock">Select Stock</label>
+        <select id="stock" class="select">
+          <option value="" selected disabled>Choose a stock</option>
+          <option value="190" data-ticker="AAPL">AAPL — Apple</option>
+          <option value="250" data-ticker="TSLA">TSLA — Tesla</option>
+          <option value="310" data-ticker="MSFT">MSFT — Microsoft</option>
+          <option value="145" data-ticker="AMZN">AMZN — Amazon</option>
+          <option value="300" data-ticker="META">META — Meta</option>
+        </select>
+        <div class="meta">
+          Current Holding: <span id="holding" class="strong">0</span> Shares
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="shares">Number of Shares</label>
+        <input id="shares" class="input" type="number" min="1" step="1" placeholder="e.g., 5" />
+      </div>
+
+      <div class="numbers">
+        <div>Estimated Proceeds: <span id="proceeds" class="strong">$0</span></div>
+        <div>Cash Available: <span id="cashAvail" class="strong">$1,000</span></div>
+      </div>
+
+      <button id="sellBtn" class="btn" disabled>Sell</button>
+      <div id="warn" class="warn">Insufficient shares to complete this trade.</div>
+    </section>
+  </main>
+
+  <script>
+    // ---- Simple demo state (match your Portfolio page numbers) ----
+    const holdings = {
+      AAPL: 10,
+      TSLA: 5,
+      MSFT: 8,
+      AMZN: 3,
+      META: 6,
+    };
+    let cash = 1000;
+
+    // ---- Elements ----
+    const select = document.getElementById('stock');
+    const shares = document.getElementById('shares');
+    const holdingEl = document.getElementById('holding');
+    const proceedsEl = document.getElementById('proceeds');
+    const cashAvailEl = document.getElementById('cashAvail');
+    const sellBtn = document.getElementById('sellBtn');
+    const warn = document.getElementById('warn');
+
+    const fmt = n => '$' + Number(n).toLocaleString();
+
+    function currentTicker(){
+      return select.options[select.selectedIndex]?.dataset?.ticker || null;
+    }
+
+    function update(){
+      const price = parseFloat(select.value || 0);
+      const ticker = currentTicker();
+      const have = ticker ? (holdings[ticker] || 0) : 0;
+      const qty = parseInt(shares.value || 0, 10);
+      const total = price * qty;
+
+      holdingEl.textContent = have;
+      proceedsEl.textContent = fmt(total);
+      cashAvailEl.textContent = fmt(cash);
+
+      const valid = price > 0 && qty > 0 && ticker;
+      const enough = qty <= have;
+
+      warn.style.display = valid && !enough ? 'block' : 'none';
+      sellBtn.disabled = !(valid && enough);
+    }
+
+    select.addEventListener('change', () => {
+      // Reset shares when changing symbol for clarity
+      shares.value = '';
+      update();
+    });
+    shares.addEventListener('input', update);
+
+    sellBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const price = parseFloat(select.value || 0);
+      const ticker = currentTicker();
+      const qty = parseInt(shares.value || 0, 10);
+      if (!ticker || !qty || qty <= 0) return;
+
+      const have = holdings[ticker] || 0;
+      if (qty > have) return; // safety
+
+      const proceeds = price * qty;
+      holdings[ticker] = have - qty;
+      cash += proceeds;
+
+      alert(`Sold ${qty} ${ticker} share(s) for ${fmt(proceeds)}.`);
+      shares.value = '';
+      update();
+    });
+
+    update();
+  </script>
+</body>
+</html>

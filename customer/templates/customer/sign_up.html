@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- You can reuse the same CSS file for consistency -->
+  <link rel="stylesheet" href="css/sign_up.css" />
+</head>
+  <!-- Top-left logo header -->
+ <body>
+  <!-- Top-left logo header -->
+  <header class="site-header">
+    <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo">
+  </header>
+  <div class="page">
+    <!-- LEFT: form -->
+    <div class="container">
+      <h2>Create your account</h2>
+
+      <!-- <div class="error">Invalid email, passwords don’t match, or username already taken.</div> -->
+
+      <form method="post" action="/sign_up.html">
+        <input type="text" name="fullname" placeholder="Full Name" required />
+        <input type="email" name="email" placeholder="Email Address" required />
+        <input type="text" name="username" placeholder="Username" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+
+        <button type="submit">Sign Up</button>
+      </form>
+
+      <div class="signup-link">
+        Already have an account? <a href="/sign_in.html">Sign In</a>
+      </div>
+    </div>
+
+    <!-- RIGHT: image panel -->
+    <div class="hero-image" aria-hidden="true"></div>
+  </div>
+</body>
+</html>

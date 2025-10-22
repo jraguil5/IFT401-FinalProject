@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ADMIN • Change Market Hours</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/portfolio.css" />
+  <style>
+    .admin-card{
+      max-width: 720px; margin:24px auto;
+      background: var(--panel); border:1px solid var(--border);
+      border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
+      padding:24px;
+    }
+    .admin-card h2{ margin:0 0 16px; }
+
+    .grid-form{
+      display:grid; grid-template-columns: 220px 1fr; gap: 12px 16px; align-items:center;
+    }
+    .grid-form label{ font-weight:600; }
+
+    .input{
+      width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px;
+      background: var(--surface); outline:none; font-size:1rem; box-sizing:border-box;
+      transition: box-shadow .15s, border-color .15s;
+    }
+    .input:focus{ border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+
+    .btn-row{ display:flex; gap:12px; margin-top: 14px; }
+    .btn{
+      padding:12px 16px; background: var(--primary); color:#fff; border:0; border-radius:8px;
+      font-weight:700; cursor:pointer; transition: background .15s, transform .02s;
+    }
+    .btn:hover{ background: var(--primary-600); }
+    .btn.secondary{ background:#e5e7eb; color:#111827; }
+
+    .warn, .ok{
+      margin-top:12px; padding:10px 12px; border-radius:8px; display:none;
+    }
+    .warn{ color:#b91c1c; background:#fee2e2; border:1px solid #fecaca; }
+    .ok{ color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; }
+    .hint{ color: var(--muted); font-size:.9rem; grid-column: 2; margin-top:-6px; }
+  </style>
+</head>
+<body class="portfolio">
+  <!-- ADMIN header -->
+  <header class="site-header">
+    <div class="brand">
+      <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo" />
+      <span class="brand-text">ADMIN • Change Market Hours</span>
+    </div>
+    <nav class="nav">
+      <a href="admin_dashboard.html">Dashboard</a>
+      <a href="admin_create_stock.html">Create Stock</a>
+      <a href="admin_market_schedule.html">Market Schedule</a>
+      <a href="admin_change_market_hours.html" class="active">Change Hours</a>
+      <a href="sign_in.html">Logout</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="admin-card">
+      <h2>Change Market Hours</h2>
+
+      <form id="hoursForm" class="grid-form" novalidate>
+        <label for="days">New Market Schedule</label>
+        <input id="days" class="input" type="text" placeholder="e.g., Mon–Fri" />
+
+        <span class="hint">Describe trading days (e.g., <em>Mon–Fri</em> or <em>Mon–Sat</em>).</span>
+
+        <label for="hours">New Market Hours</label>
+        <input id="hours" class="input" type="text" placeholder="HH:MM–HH:MM (24h)" />
+
+        <span class="hint">Use 24-hour format like <em>09:30–16:00</em>.</span>
+      </form>
+
+      <div class="btn-row">
+        <button id="updateBtn" class="btn">Update</button>
+        <button id="cancelBtn" class="btn secondary" type="button">Cancel</button>
+      </div>
+
+      <div id="ok" class="ok">Market schedule updated successfully.</div>
+      <div id="warn" class="warn">Invalid input. Use days like “Mon–Fri” and hours like “09:30–16:00”.</div>
+    </section>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const daysEl = $('days');
+    const hoursEl = $('hours');
+    const ok = $('ok');
+    const warn = $('warn');
+
+    // Very simple patterns you can tighten later
+    // Days: letters and separators (Mon–Fri, Mon-Fri, Mon to Fri)
+    const daysRe  = /^[A-Za-z\s–\-to,]+$/;
+    // Hours: HH:MM–HH:MM (24h), allows 00–23 + 00–59
+    const hoursRe = /^(?:[01]\d|2[0-3]):[0-5]\d[–-](?:[01]\d|2[0-3]):[0-5]\d$/;
+
+    function clearAlerts(){ ok.style.display = 'none'; warn.style.display = 'none'; }
+
+    function validate(){
+      const d = daysEl.value.trim();
+      const h = hoursEl.value.trim();
+      if (!d || !h) return false;
+      if (!daysRe.test(d)) return false;
+
+      // Normalize en-dash / hyphen
+      const hoursNorm = h.replace('-', '–');
+      if (!hoursRe.test(hoursNorm)) return false;
+
+      // Ensure open < close (simple lexical works with 24h HH:MM strings)
+      const [open, close] = hoursNorm.split('–');
+      if (open >= close) return false;
+
+      return true;
+    }
+
+    function save(schedule, hours){
+      // TODO: replace with real API call
+      console.log('Saving market hours:', { schedule, hours });
+    }
+
+    $('updateBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      clearAlerts();
+
+      if (!validate()){
+        warn.style.display = 'block';
+        return;
+      }
+
+      const schedule = daysEl.value.trim();
+      const hours = hoursEl.value.trim().replace('-', '–');
+
+      save(schedule, hours);
+
+      ok.textContent = `Market schedule set to ${schedule}, ${hours}.`;
+      ok.style.display = 'block';
+    });
+
+    $('cancelBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      clearAlerts();
+      daysEl.value = '';
+      hoursEl.value = '';
+    });
+  </script>
+</body>
+</html>

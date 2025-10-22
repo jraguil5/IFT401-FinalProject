@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shareholder Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/portfolio.css" />
+</head>
+
+<body class="portfolio">
+  <!-- Single header: logo left, nav right -->
+  <header class="site-header">
+    <div class="brand">
+      <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo" />
+      <span class="brand-text">Shareholder Portfolio</span>
+    </div>
+
+    <nav class="nav">
+      <a href="portfolio.html" class="active">Portfolio</a>
+      <a href="#">Buy Stock</a>
+      <a href="#">Sell Stock</a>
+      <a href="#">Deposit Cash</a>
+      <a href="#">Withdraw Cash</a>
+      <a href="sign_in.html">Logout</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- Main two-column area -->
+    <section class="grid">
+      <!-- Holdings table -->
+      <div class="card">
+        <h2>Portfolio</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Stock</th>
+                <th>Ticker</th>
+                <th>Shares</th>
+                <th>Current Price</th>
+                <th>Total Value</th>
+                <th>% Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Apple</td><td>AAPL</td><td>10</td><td>$190</td><td>$1,900</td><td class="pos">+2.3%</td>
+              </tr>
+              <tr>
+                <td>Tesla</td><td>TSLA</td><td>5</td><td>$250</td><td>$1,250</td><td class="neg">-1.2%</td>
+              </tr>
+              <tr>
+                <td>Microsoft</td><td>MSFT</td><td>8</td><td>$310</td><td>$2,480</td><td class="neg">-0.8%</td>
+              </tr>
+              <tr>
+                <td>Amazon</td><td>AMZN</td><td>3</td><td>$145</td><td>$435</td><td class="pos">+0.6%</td>
+              </tr>
+              <tr>
+                <td>Meta</td><td>META</td><td>6</td><td>$300</td><td>$1,800</td><td class="pos">+2.7%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chart placeholder -->
+      <div class="card">
+        <h2>Asset Growth</h2>
+        <!-- simple SVG placeholder chart -->
+        <div class="chart">
+          <svg viewBox="0 0 400 220" preserveAspectRatio="none">
+            <rect x="0" y="0" width="400" height="220" class="chart-bg"/>
+            <!-- grid lines -->
+            <g stroke="currentColor" opacity="0.12">
+              <line x1="0" y1="180" x2="400" y2="180"/>
+              <line x1="0" y1="140" x2="400" y2="140"/>
+              <line x1="0" y1="100" x2="400" y2="100"/>
+              <line x1="0" y1="60"  x2="400" y2="60"/>
+            </g>
+            <!-- the line -->
+            <polyline class="line"
+              points="10,170 70,150 130,160 190,120 250,130 310,80 370,95"
+              fill="none"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary metrics -->
+    <section class="summary">
+      <div class="metric"><span>Cash Balance:</span> <strong>$1,500</strong></div>
+      <div class="metric"><span>Total Portfolio Value:</span> <strong>$7,865</strong></div>
+      <div class="metric"><span>Overall Account Value:</span> <strong>$9,365</strong></div>
+    </section>
+
+    <!-- Transaction history -->
+    <section class="card">
+      <h2>Transaction History</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Type</th><th>Stock</th><th>Amount</th><th>Price</th><th>Balance After</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>08/01/25</td><td>Buy</td><td>AAPL</td><td>10</td><td>$190</td><td>$1,160</td></tr>
+            <tr><td>08/07/25</td><td>Deposit</td><td>—</td><td>$500</td><td>—</td><td>$1,660</td></tr>
+            <tr><td>08/15/25</td><td>Sell</td><td>TSLA</td><td>1</td><td>$250</td><td>$1,910</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
