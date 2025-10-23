@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
   <title>Withdraw Cash</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Reuse shared styles -->
-  <link rel="stylesheet" href="css/portfolio.css" />
+  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
 
   <style>
     /* Page-specific tweaks */
@@ -66,11 +67,11 @@
   <!-- Same header as other pages -->
   <header class="site-header">
     <div class="brand">
-      <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo" />
+      <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
       <span class="brand-text">Withdraw Cash</span>
     </div>
     <nav class="nav">
-      <a href="portfolio.html">Portfolio</a>
+      <a href="{% url 'portfolio' %}">Portfolio</a>
       <a href="buy_stock.html">Buy Stock</a>
       <a href="sell_stock.html">Sell Stock</a>
       <a href="deposit_cash.html">Deposit Cash</a>

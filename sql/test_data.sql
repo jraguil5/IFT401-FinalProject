@@ -4,9 +4,9 @@ USE `investrio-dev-db`;
 
 INSERT INTO User (UserID, FullName, UserName, Email, PasswordHash, Role)
 VALUES
-(1, 'Richard Lahaie', 'rlahaie', 'richard.lahaie@example.com', 'hashed_pw1', 'Admin'),
-(2, 'Summer Olson', 'solson', 'summer.olson@example.com', 'hashed_pw2', 'Trader'),
-(3, 'Jorge Aguilar', 'jaguilar', 'jorge.aguilar@example.com', 'hashed_pw3', 'Trader');
+(1, 'Richard Lahaie', 'rlahaie', 'richard.lahaie@example.com', 'hashed_pw1', 'ADMIN'),
+(2, 'Summer Olson', 'solson', 'summer.olson@example.com', 'hashed_pw2', 'CUSTOMER'),
+(3, 'Jorge Aguilar', 'jaguilar', 'jorge.aguilar@example.com', 'hashed_pw3', 'CUSTOMER');
 
 
 -- Stocks

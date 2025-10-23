@@ -27,7 +27,7 @@ body{
   display: flex;
   align-items: center; /* centers both vertically */
   justify-content: flex-start; /* keeps form to left */
-  height: 100vh;        /* instead of min-height */
+  min-height: calc(100vh - 80px);     /* instead of min-height */
   padding-top: 0;       /* remove extra padding */
   box-sizing: border-box;
 }
@@ -45,16 +45,18 @@ body{
 }
 
 /* ---------- Logo Section ---------- */
-.site-header{
-  position: fixed;
-  top: 120px; 
-  left: 0; right: 0;
-  height: 80px;
+..site-header {
+  position: relative; 
+  top: auto;
+  height: auto;
+  left: 0; 
+  right: 0;
+  width: 100%;
+  padding: 120px 80px 20px 80px; /* 120px Top, 80px Sides, 20px Bottom */
   display: flex;
   align-items: center;
-  padding: 0 50px;
   z-index: 1000;
-  background: transparent; /* or rgba(0,0,0,.12) for a subtle bar */
+  background: transparent;
 }
 
 .logo {
@@ -181,7 +183,11 @@ button:active{ transform: translateY(1px); }
 
 /* ---------- Small screens: stack ---------- */
 @media (max-width: 900px){
-  .page{ flex-direction: column; }
+  .body{ 
+    display: flex;
+    flex-direction: column; 
+  }
+  
   .container{
     margin: 24px auto;
     width: calc(100% - 32px);

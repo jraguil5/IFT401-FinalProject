@@ -162,3 +162,5 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'customer.CustomUser'
 
+LOGIN_URL = '/sign_in/'
+

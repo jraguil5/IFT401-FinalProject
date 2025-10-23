@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
   <title>Buy Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Reuse the same stylesheet as portfolio -->
-  <link rel="stylesheet" href="css/portfolio.css" />
+  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
 
   <style>
     /* Page-specific tweaks only (everything else comes from portfolio.css) */
@@ -70,7 +71,7 @@
   <!-- SAME HEADER AS portfolio.html -->
   <header class="site-header">
     <div class="brand">
-      <img src="images/logo_investr.io.png" alt="InvestR.io Logo" class="site-logo" />
+      <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
       <span class="brand-text">Buy Stock</span>
     </div>
     <nav class="nav">

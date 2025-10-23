@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import transaction
@@ -9,8 +10,6 @@ from .serializers import BrokerageAccountSerializer, TransactionSerializer, Stoc
 from .forms import UserRegistrationForm
 from decimal import Decimal
 
-def dashboard_view(request):
-    return render(request, 'customer/dashboard.html')
 
 class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BrokerageAccountSerializer
@@ -152,6 +151,17 @@ class TradeViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Trade.objects.filter(order__account__user=self.request.user)
     
+def is_admin(user):
+    return user.is_staff or user.is_superuser
+
+@user_passes_test(is_admin)
+def admin_change_market_hours_view(request):
+    return render(request, 'customer/admin_change_market_hours.html', {})
+
+@user_passes_test(is_admin) 
+def admin_create_stock_view(request):
+    return render(request, 'customer/admin_create_stock.html', {})
+
 def register_user(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
@@ -171,4 +181,28 @@ def register_user(request):
     else:
         form = UserRegistrationForm()
     
-    return render(request, 'customer/registration/register.html', {'form': form})
+    return render(request, 'customer/sign_up.html', {'form': form})
+
+@login_required
+def dashboard_view(request):
+    return render(request, 'customer/dashboard.html')
+
+@login_required
+def portfolio_view(request):
+    return render(request, 'customer/portfolio.html', {})
+
+@login_required
+def buy_stock_view(request):
+    return render(request, 'customer/buy_stock.html', {})
+
+@login_required
+def sell_stock_view(request):
+    return render(request, 'customer/sell_stock.html', {})
+
+@login_required
+def deposit_cash_view(request):
+    return render(request, 'customer/deposit_cash.html', {})
+
+@login_required
+def withdraw_cash_view(request):
+    return render(request, 'customer/withdraw_cash.html', {})
