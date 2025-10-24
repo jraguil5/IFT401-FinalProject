@@ -164,3 +164,5 @@ AUTH_USER_MODEL = 'customer.CustomUser'
 
 LOGIN_URL = '/sign_in/'
 
+LOGIN_REDIRECT_URL = '/role_router/'
+

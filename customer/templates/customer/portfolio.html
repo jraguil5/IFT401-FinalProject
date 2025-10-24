@@ -17,12 +17,12 @@
     </div>
 
     <nav class="nav">
-      <a href="portfolio.html" class="active">Portfolio</a>
-      <a href="#">Buy Stock</a>
-      <a href="#">Sell Stock</a>
-      <a href="#">Deposit Cash</a>
-      <a href="#">Withdraw Cash</a>
-      <a href="sign_in.html">Logout</a>
+      <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
+      <a href="{% url 'buy_stock' %}">Buy Stock</a>
+      <a href="{% url 'sell_stock' %}">Sell Stock</a>
+      <a href="{% url 'deposit_cash' %}">Deposit Cash</a>
+      <a href="{% url 'withdraw_cash' %}">Withdraw Cash</a>
+      <a href="{% url 'sign_out' %}">Logout</a>
     </nav>
   </header>
 

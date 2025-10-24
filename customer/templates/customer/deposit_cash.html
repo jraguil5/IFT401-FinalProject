@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <title>Deposit Cash</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/portfolio.css">
+  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}">
   <style>
     /* Keep ONLY page-specific styles here */
     .deposit-card{max-width:560px;margin:24px auto;background:#fff;border:1px solid #d1fae5;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:24px}
@@ -28,12 +28,12 @@
       <span class="brand-text">Deposit Cash</span>
     </div>
     <nav class="nav">
-      <a href="portfolio.html">Portfolio</a>
-      <a href="buy_stock.html">Buy Stock</a>
-      <a href="sell_stock.html">Sell Stock</a>
-      <a href="deposit_cash.html" class="active">Deposit Cash</a>
-      <a href="withdraw_cash.html">Withdraw Cash</a>
-      <a href="sign_in.html">Logout</a>
+      <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
+      <a href="{% url 'buy_stock' %}">Buy Stock</a>
+      <a href="{% url 'sell_stock' %}">Sell Stock</a>
+      <a href="{% url 'deposit_cash' %}">Deposit Cash</a>
+      <a href="{% url 'withdraw_cash' %}">Withdraw Cash</a>
+      <a href="{% url 'sign_out' %}">Logout</a>
     </nav>
   </header>
 

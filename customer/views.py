@@ -184,8 +184,8 @@ def register_user(request):
     return render(request, 'customer/sign_up.html', {'form': form})
 
 @login_required
-def dashboard_view(request):
-    return render(request, 'customer/dashboard.html')
+def admin_dashboard_view(request):
+    return render(request, 'admin/admin_dashboard.html')
 
 @login_required
 def portfolio_view(request):
@@ -206,3 +206,11 @@ def deposit_cash_view(request):
 @login_required
 def withdraw_cash_view(request):
     return render(request, 'customer/withdraw_cash.html', {})
+
+@login_required
+def role_based_redirect(request):
+    user = request.user
+    if user.is_staff or user.is_superuser:
+        return redirect('admin_dashboard')
+    else:
+        return redirect('portfolio')
