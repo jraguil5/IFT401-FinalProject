@@ -86,11 +86,20 @@
             text-decoration: underline;
         }
     </style>
-    <link rel="stylesheet" href="{% static 'css/sign_up.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/sign_in.css' %}" />
 </head>
 <body>
     <div class="container">
         <h2>Sign In</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="message {{ message.tags }}" 
+                 style="padding: 10px; margin-bottom: 15px; border-radius: 4px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
 
         <form method="post" action="{% url 'sign_in' %}">
             

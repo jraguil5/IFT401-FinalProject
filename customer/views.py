@@ -175,7 +175,7 @@ def register_user(request):
                     password=form.cleaned_data['password']
                 )
                 messages.success(request, 'Registration successful! You may now sign in.')
-                return redirect('login')
+                return redirect('sign_in')
             except Exception as e:
                 messages.error(request, 'Registration failed. Username or email may already exist.')
     else:
