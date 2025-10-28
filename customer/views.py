@@ -1,3 +1,5 @@
+import json
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -9,6 +11,9 @@ from .models import BrokerageAccount, CustomUser, Transaction, Stock, Order, Tra
 from .serializers import BrokerageAccountSerializer, TransactionSerializer, StockSerializer, OrderSerializer, TradeSerializer
 from .forms import UserRegistrationForm
 from decimal import Decimal
+from django.db.models import Max
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 
 class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,31 +53,42 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                     user_account.cash_balance -= total_cost
                     user_account.save()
 
+                    next_order_id = (Order.objects.aggregate(Max('id'))['id__max'] or 2000000000) + 1
+                    next_trade_id = (Trade.objects.aggregate(Max('id'))['id__max'] or 3000000000) + 1
+                    next_transaction_id = (Transaction.objects.aggregate(Max('id'))['id__max'] or 4000000000) + 1
+                    next_position_id = (Position.objects.aggregate(Max('id'))['id__max'] or 5000000000) + 1
+
                     position, created = Position.objects.get_or_create(
                         account=user_account,
                         stock=stock,
-                        defaults={'quantity': 0}
+                        defaults={'quantity': 0, 'id': next_position_id}  
                     )
                     
                     position.quantity += quantity
                     position.save() 
 
                     order = Order.objects.create(
+                        id=next_order_id,
                         account=user_account,
                         stock=stock,
                         action='BUY',
                         quantity=quantity,
-                        status='Filled'
+                        status='Filled',
+                        created_at=timezone.now(),
+                        executed_at=timezone.now(),
                     )
+
                     Trade.objects.create(
+                        id=next_trade_id,
                         order=order,
                         executed_price=current_price,
                         executed_qty=quantity,
                     )
 
                     Transaction.objects.create(
+                    id=next_transaction_id,
                     account=user_account,
-                    transaction_type=trade_type,
+                    transaction_type='STOCK_TRADE',
                     amount=total_cost
                     )
 
@@ -100,20 +116,36 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                     else:
                         position.save()
 
+                    last_order_id = Order.objects.aggregate(Max('id'))['id__max']
+                    next_order_id = (last_order_id or 2000000000) + 1 
+
+                    last_trade_id = Trade.objects.aggregate(Max('id'))['id__max']
+                    next_trade_id = (last_trade_id or 3000000000) + 1
+
+                    last_transaction_id = Transaction.objects.aggregate(Max('id'))['id__max']
+                    next_transaction_id = (last_transaction_id or 4000000000) + 1
+
                     order = Order.objects.create(
+                        id=next_order_id,
                         account=user_account,
                         stock=stock,
                         action='SELL',
                         quantity=quantity,
-                        status='Filled'
+                        status='Filled',
+                        created_at=timezone.now(),
+                        executed_at=timezone.now(),
                     )
+
                     Trade.objects.create(
+                        id=next_trade_id,
                         order=order,
                         executed_price=current_price,
                         executed_qty=quantity,
+
                     )
 
                     Transaction.objects.create(
+                    id=next_transaction_id,
                     account=user_account,
                     transaction_type=trade_type,
                     amount=total_cost
@@ -162,28 +194,60 @@ def admin_change_market_hours_view(request):
 def admin_create_stock_view(request):
     return render(request, 'customer/admin_create_stock.html', {})
 
+@csrf_exempt
 def register_user(request):
     if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
+        if 'application/json' in request.content_type:
             try:
-                CustomUser.objects.create_user(
-                    UserName=form.cleaned_data['UserName'],
-                    email=form.cleaned_data['email'],
-                    FullName=form.cleaned_data['FullName'],
-                    Role='CUSTOMER', 
-                    password=form.cleaned_data['password']
-                )
-                messages.success(request, 'Registration successful! You may now sign in.')
-                return redirect('sign_in')
+                data = json.loads(request.body.decode('utf-8'))
+
+                username = data.get('UserName') 
+                email = data.get('email')
+                full_name = data.get('FullName')
+                role = data.get('Role', 'CUSTOMER') # Default role if not provided
+                password = data.get('password')
+
+                if not all([username, email, full_name, password]):
+                    return JsonResponse({"error": "Missing required fields in JSON payload."}, status=400)
+                
+                with transaction.atomic():
+                    CustomUser.objects.create_user(
+                        UserName=username,
+                        email=email,
+                        FullName=full_name,
+                        Role=role, 
+                        password=password
+                    )
+
+                    return JsonResponse({"message": f"User {username} created successfully."}, status=status.HTTP_201_CREATED)
+            
+            except json.JSONDecodeError:
+                return JsonResponse({"error": "Invalid JSON format."}, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                messages.error(request, 'Registration failed. Username or email may already exist.')
+                return JsonResponse({"error": f"Registration failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            form = UserRegistrationForm(request.POST)
+            if form.is_valid():
+                try:
+                    CustomUser.objects.create_user(
+                        UserName=form.cleaned_data['UserName'],
+                        email=form.cleaned_data['email'],
+                        FullName=form.cleaned_data['FullName'],
+                        Role='CUSTOMER', 
+                        password=form.cleaned_data['password']
+                    )
+                    messages.success(request, 'Registration successful! You may now sign in.')
+                    return redirect('sign_in')
+                except Exception as e:
+                    messages.error(request, 'Registration failed. Username or email may already exist.')
+            
+            return render(request, 'customer/sign_up.html', {'form': form})
     else:
         form = UserRegistrationForm()
-    
-    return render(request, 'customer/sign_up.html', {'form': form})
+        return render(request, 'customer/sign_up.html', {'form': form})
 
-@login_required
+@user_passes_test(is_admin)
 def admin_dashboard_view(request):
     return render(request, 'admin/admin_dashboard.html')
 

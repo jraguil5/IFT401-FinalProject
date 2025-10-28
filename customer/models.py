@@ -1,8 +1,11 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Max
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager): 
+
+    @transaction.atomic
     def create_user(self, UserName, email, FullName, Role, password=None, **extra_fields):
         if not UserName:
             raise ValueError('UserName field cannot be empty.')
@@ -10,10 +13,18 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Email is required.')
         
         normalized_role = Role.upper() 
+
+        last_user_id = CustomUser.objects.aggregate(Max('UserID'))['UserID__max']
+        next_user_id = (last_user_id or 10000) + 1
         
-        user = self.model(UserName=UserName, email=self.normalize_email(email), FullName=FullName, Role=normalized_role, **extra_fields)
+        user = self.model(UserID=next_user_id, UserName=UserName, email=self.normalize_email(email), FullName=FullName, Role=normalized_role, **extra_fields)
         user.set_password(password) 
         user.save(using=self._db)
+
+        last_account_id = BrokerageAccount.objects.aggregate(Max('AccountID'))['AccountID__max']
+        next_account_id = (last_account_id or 10000) + 1
+
+        BrokerageAccount.objects.create(AccountID=next_account_id, user=user,cash_balance=0.00)
 
         return user
     

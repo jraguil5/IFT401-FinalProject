@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>ADMIN • Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
+    <style>
+        .admin-card{
+            max-width: 720px; margin:24px auto;
+            background: var(--panel); border:1px solid var(--border);
+            border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
+            padding:24px; text-align: center; 
+        }
+        .admin-card h2{ margin:0 0 16px; }
+        
+        .construction-message {
+            font-size: 1.5rem;
+            color: var(--primary);
+            padding: 20px;
+            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            margin: 20px 0;
+            display: inline-block;
+        }
+        .admin-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .admin-links a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="portfolio">
+    <header class="site-header">
+        <div class="brand">
+            <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
+            <span class="brand-text">ADMIN • Dashboard</span>
+        </div>
+        <nav class="nav">
+            <a href="{% url 'admin_dashboard' %}" class="active">Dashboard</a>
+            <a href="{% url 'admin_create_stock' %}">Create Stock</a>
+            <a href="{% url 'admin_change_market_hours' %}">Change Hours</a>
+            <a href="{% url 'sign_out' %}">Logout</a>
+        </nav>
+    </header>
+
+    <main class="wrap">
+        <div class="admin-card">
+            <h2>Welcome, Administrator</h2>
+            
+            <div class="construction-message">
+                Admin Dashboard is Under Construction 
+            </div>
+
+            <p>Please use the links below or the navigation bar to access available administration tools.</p>
+            
+            <div class="admin-links">
+                <a href="{% url 'admin_create_stock' %}">Manage Stocks</a> |
+                <a href="{% url 'admin_change_market_hours' %}">Change Market Schedule</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
