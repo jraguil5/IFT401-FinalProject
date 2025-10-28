@@ -1,5 +1,4 @@
-/* ---------- Money-green theme ---------- */
-:root{
+:root {
   --bg: #0b3d2e;
   --bg-2: #14532d;
   --panel: #ffffff;
@@ -12,53 +11,44 @@
   --border: #d1fae5;
 }
 
-/* ---------- Page layout ---------- */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 
-body{
+body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   color: var(--ink);
   background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
 }
 
-/* The shared .site-header, .brand, .site-logo, .brand-text, .nav
-   come from css/portfolio.css. Do NOT redefine them here. */
-
-/* Push content below sticky header from portfolio.css */
-.page{
+/* Page layout */
+.page {
   display: flex;
-  align-items: center;          /* vertically center the form block */
-  justify-content: flex-start;  /* keep form to the left */
-  min-height: 100vh;
-  padding-top: 100px;           /* header height + breathing room */
+  align-items: center;       
+  justify-content: center;   
+  height: 100vh;                          
 }
 
-/* LEFT: form card */
-.container{
-  flex: 1;
+/* Form layout */
+.container {
   max-width: 480px;
-  background: var(--panel);
   width: 400px;
+  background: var(--panel);
   padding: 48px 40px;
-  margin: 40px 0 40px 64px;     /* push away from left edge */
+  margin: 0;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,.15);
   border: 1px solid var(--border);
 }
 
-h2{
+h2 {
   margin: 0 0 20px;
   color: #0f172a;
 }
 
-/* Inputs */
+/* Form inputs */
 input[type="text"],
-input[type="password"]{
+input[type="password"] {
   width: 100%;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -68,13 +58,13 @@ input[type="password"]{
   outline: none;
   transition: box-shadow .15s, border-color .15s;
 }
-input:focus{
+
+input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--ring);
 }
 
-/* Button */
-button{
+button {
   width: 100%;
   padding: 12px 16px;
   background: var(--primary);
@@ -85,48 +75,71 @@ button{
   cursor: pointer;
   transition: background .15s, transform .02s;
 }
-button:hover{ background: var(--primary-600); }
-button:active{ transform: translateY(1px); }
 
-/* Links / misc */
-.actions{
+button:hover { background: var(--primary-600); }
+button:active { transform: translateY(1px); }
+
+/* Links */
+.actions {
   margin-top: 12px;
   display: flex;
   justify-content: flex-start;
 }
-.actions a{
+
+.actions a {
   font-size: .95rem;
   color: var(--muted);
   text-decoration: none;
 }
-.actions a:hover{ text-decoration: underline; }
 
-.signup-link{
+.actions a:hover { text-decoration: underline; }
+
+.signup-link {
   margin-top: 12px;
   font-size: .95rem;
   text-align: center;
   color: var(--muted);
 }
-.signup-link a{
+
+.signup-link a {
   color: var(--primary-600);
   text-decoration: none;
   font-weight: 600;
 }
-.signup-link a:hover{ text-decoration: underline; }
 
-/* Error message */
-.error{
+.signup-link a:hover { text-decoration: underline; }
+
+/* Messages */
+.error,
+.message {
   margin: 8px 0 12px;
   font-size: .95rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.error,
+.message.error {
   color: #b91c1c;
   background: #fee2e2;
   border: 1px solid #fecaca;
-  padding: 10px 12px;
-  border-radius: 8px;
 }
 
-/* RIGHT: image panel */
-.hero-image{
+.message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* Hero image */
+.hero-image {
   flex: 1;
   min-height: 90vh;
   margin: 40px;
@@ -137,104 +150,27 @@ button:active{ transform: translateY(1px); }
   box-shadow: 0 0 20px rgba(0,0,0,0.25);
 }
 
-/* ---------- Small screens: stack ---------- */
-@media (max-width: 900px){
-/* pull content up closer to the header */
-.page{
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  padding-top: 16px;              /* was 100px */
-}
+/* Responsive */
+@media (max-width: 900px) {
+  .page {
+    padding-top: 120px;
+  }
 
-/* form card slightly closer to top */
-.container{
-  flex: 1;
-  max-width: 480px;
-  background: var(--panel);
-  padding: 48px 40px;
-  margin: 24px 0 32px 64px;       /* was 40px 0 40px 64px */
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.15);
-  border: 1px solid var(--border);
-}
+  .container {
+    margin: 24px 32px;
+  }
 
-/* hero image tucked under header with a small gap */
-.hero-image{
-  flex: 1;
-  min-height: calc(100vh - 160px);/* keeps it tall but not overflowing */
-  margin: 16px 24px 32px 24px;    /* was 40px on all sides */
-  border-radius: 16px;
-  background: url("../images/stock_signin.jpg") center/cover no-repeat;
-  background-color: #064e3b;
-  border: 4px solid #0b3d2e;
-  box-shadow: 0 0 20px rgba(0,0,0,0.25);
-}
-/* ---- Fix header spacing ---- */
-.site-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  padding: 16px 32px;
-  background: transparent;
-  z-index: 10;
-}
-
-/* Push content slightly down so it clears the fixed logo */
-.page {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  min-height: 100vh;
-  padding-top: 120px; /* just enough space under the logo */
-  margin: 0;
-}
-
-/* Adjust form position */
-.container {
-  margin-left: 64px;
-  margin-top: 0; /* remove the gap */
-}
-
-/* Pull the image up */
-.hero-image {
-  flex: 1;
-  min-height: 90vh;
-  margin-top: 0;   /* remove extra top margin */
-  margin-right: 32px;
-  margin-bottom: 0;
-  border-radius: 16px;
-  background: url("../images/stock_signin.jpg") center/cover no-repeat;
-  border: 4px solid #0b3d2e;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
-}
-
-}
-
-/* Messages */
-.message {
-    padding: 10px 12px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    font-size: 0.95em;
-    font-weight: 500;
-}
-
-.message.success {
-    background-color: #d4edda;
-    color: #155724; 
-    border: 1px solid #c3e6cb;  
-}
-
-.message.error {
-    background-color: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-}
-
-.message.info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
+  .hero-image {
+    min-height: calc(100vh - 160px);
+    margin: 16px 24px 32px;
+  }
+  
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 16px 32px;
+    background: transparent;
+    z-index: 10;
+  }
 }

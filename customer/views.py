@@ -197,6 +197,8 @@ def admin_create_stock_view(request):
 @csrf_exempt
 def register_user(request):
     if request.method == 'POST':
+
+        # json for API testing, remove once testing complete 201 - 231
         if 'application/json' in request.content_type:
             try:
                 data = json.loads(request.body.decode('utf-8'))
