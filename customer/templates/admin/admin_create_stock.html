@@ -45,11 +45,11 @@
       <span class="brand-text">ADMIN • Create Stock</span>
     </div>
     <nav class="nav">
-      <a href="admin_dashboard.html">Dashboard</a>
-      <a href="admin_create_stock.html" class="active">Create Stock</a>
-      <a href="admin_market_schedule.html">Market Schedule</a>
-      <a href="sign_in.html">Logout</a>
-    </nav>
+            <a href="{% url 'admin_dashboard' %}" class="active">Dashboard</a>
+            <a href="{% url 'admin_create_stock' %}">Create Stock</a>
+            <a href="{% url 'admin_change_market_hours' %}">Change Hours</a>
+            <a href="{% url 'sign_out' %}">Logout</a>
+        </nav>
   </header>
 
   <main class="wrap">

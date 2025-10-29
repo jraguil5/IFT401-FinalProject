@@ -15,6 +15,9 @@ from django.db.models import Max
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+def get_next_id(model_class, default_start):
+    last_id = model_class.objects.aggregate(Max('id'))['id__max']
+    return (last_id or default_start) + 1
 
 class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = BrokerageAccountSerializer
@@ -53,10 +56,10 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                     user_account.cash_balance -= total_cost
                     user_account.save()
 
-                    next_order_id = (Order.objects.aggregate(Max('id'))['id__max'] or 2000000000) + 1
-                    next_trade_id = (Trade.objects.aggregate(Max('id'))['id__max'] or 3000000000) + 1
-                    next_transaction_id = (Transaction.objects.aggregate(Max('id'))['id__max'] or 4000000000) + 1
-                    next_position_id = (Position.objects.aggregate(Max('id'))['id__max'] or 5000000000) + 1
+                    next_order_id = get_next_id(Order, 2000000000)
+                    next_trade_id = get_next_id(Trade, 3000000000)
+                    next_transaction_id = get_next_id(Transaction, 4000000000)
+                    next_position_id = get_next_id(Position, 5000000000)
 
                     position, created = Position.objects.get_or_create(
                         account=user_account,
@@ -103,6 +106,7 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                     except Position.DoesNotExist:
                         return Response({"error": f"You don't own any {stock.ticker}"}, status=status.HTTP_400_BAD_REQUEST)
 
+                    #  Check if user has enough shares
                     if position.quantity < quantity:
                         return Response({"error": f"Not enough shares to sell!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,14 +120,9 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                     else:
                         position.save()
 
-                    last_order_id = Order.objects.aggregate(Max('id'))['id__max']
-                    next_order_id = (last_order_id or 2000000000) + 1 
-
-                    last_trade_id = Trade.objects.aggregate(Max('id'))['id__max']
-                    next_trade_id = (last_trade_id or 3000000000) + 1
-
-                    last_transaction_id = Transaction.objects.aggregate(Max('id'))['id__max']
-                    next_transaction_id = (last_transaction_id or 4000000000) + 1
+                    next_order_id = get_next_id(Order, 2000000000)
+                    next_trade_id = get_next_id(Trade, 3000000000)
+                    next_transaction_id = get_next_id(Transaction, 4000000000)
 
                     order = Order.objects.create(
                         id=next_order_id,
@@ -253,25 +252,33 @@ def register_user(request):
 def admin_dashboard_view(request):
     return render(request, 'admin/admin_dashboard.html')
 
+@user_passes_test(is_admin)
+def admin_change_market_hours_view(request):
+    return render(request, 'admin/admin_change_market_hours.html')
+
+@user_passes_test(is_admin) 
+def admin_create_stock_view(request):
+    return render(request, 'admin/admin_create_stock.html')
+
 @login_required
 def portfolio_view(request):
-    return render(request, 'customer/portfolio.html', {})
+    return render(request, 'customer/portfolio.html')
 
 @login_required
 def buy_stock_view(request):
-    return render(request, 'customer/buy_stock.html', {})
+    return render(request, 'customer/buy_stock.html')
 
 @login_required
 def sell_stock_view(request):
-    return render(request, 'customer/sell_stock.html', {})
+    return render(request, 'customer/sell_stock.html')
 
 @login_required
 def deposit_cash_view(request):
-    return render(request, 'customer/deposit_cash.html', {})
+    return render(request, 'customer/deposit_cash.html')
 
 @login_required
 def withdraw_cash_view(request):
-    return render(request, 'customer/withdraw_cash.html', {})
+    return render(request, 'customer/withdraw_cash.html')
 
 @login_required
 def role_based_redirect(request):
