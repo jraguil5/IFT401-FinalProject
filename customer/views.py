@@ -186,12 +186,16 @@ def is_admin(user):
     return user.is_staff or user.is_superuser
 
 @user_passes_test(is_admin)
+def admin_dashboard_view(request):
+    return render(request, 'admin/admin_dashboard.html')
+
+@user_passes_test(is_admin)
 def admin_change_market_hours_view(request):
-    return render(request, 'customer/admin_change_market_hours.html', {})
+    return render(request, 'admin/admin_change_market_hours.html')
 
 @user_passes_test(is_admin) 
 def admin_create_stock_view(request):
-    return render(request, 'customer/admin_create_stock.html', {})
+    return render(request, 'admin/admin_create_stock.html')
 
 @csrf_exempt
 def register_user(request):
@@ -248,17 +252,6 @@ def register_user(request):
         form = UserRegistrationForm()
         return render(request, 'customer/sign_up.html', {'form': form})
 
-@user_passes_test(is_admin)
-def admin_dashboard_view(request):
-    return render(request, 'admin/admin_dashboard.html')
-
-@user_passes_test(is_admin)
-def admin_change_market_hours_view(request):
-    return render(request, 'admin/admin_change_market_hours.html')
-
-@user_passes_test(is_admin) 
-def admin_create_stock_view(request):
-    return render(request, 'admin/admin_create_stock.html')
 
 @login_required
 def portfolio_view(request):
