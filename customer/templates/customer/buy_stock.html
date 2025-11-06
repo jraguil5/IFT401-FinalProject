@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <title>Buy Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Reuse the same stylesheet as portfolio -->
   <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
 
   <style>
@@ -68,15 +67,14 @@
 </head>
 
 <body class="portfolio">
-  <!-- SAME HEADER AS portfolio.html -->
   <header class="site-header">
     <div class="brand">
       <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
       <span class="brand-text">Buy Stock</span>
     </div>
     <nav class="nav">
-     <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
-      <a href="{% url 'buy_stock' %}">Buy Stock</a>
+     <a href="{% url 'portfolio' %}">Portfolio</a>
+      <a href="{% url 'buy_stock' %}" class="active">Buy Stock</a>
       <a href="{% url 'sell_stock' %}">Sell Stock</a>
       <a href="{% url 'deposit_cash' %}">Deposit Cash</a>
       <a href="{% url 'withdraw_cash' %}">Withdraw Cash</a>
@@ -87,18 +85,23 @@
   <main class="wrap">
     <section class="buy-card">
       <h2>Buy Stock</h2>
+      
+      <form id="tradeForm" method="POST" action="/api/v1/accounts/trade/" style="display:none;">
+          {% csrf_token %}
+          <input type="hidden" name="ticker" id="tradeTickerBuy">
+          <input type="hidden" name="quantity" id="tradeQuantityBuy">
+          <input type="hidden" name="type" value="BUY">
+      </form>
 
       <div class="field">
         <label for="stock">Select Stock</label>
         <select id="stock" class="select">
           <option value="" selected disabled>Choose a stock</option>
-          <option value="190" data-ticker="AAPL">AAPL — Apple</option>
-          <option value="250" data-ticker="TSLA">TSLA — Tesla</option>
-          <option value="310" data-ticker="MSFT">MSFT — Microsoft</option>
-          <option value="145" data-ticker="AMZN">AMZN — Amazon</option>
-          <option value="300" data-ticker="META">META — Meta</option>
+          {% for stock in stocks %}
+          <option value="{{ stock.current_price }}" data-ticker="{{ stock.ticker }}">{{ stock.ticker }} — {{ stock.company_name }}</option>
+          {% endfor %}
         </select>
-        <div class="meta">Current Price: <span id="priceDisplay">$0</span></div>
+        <div class="meta">Current Price: <span id="priceDisplay">$0.00</span></div>
       </div>
 
       <div class="field">
@@ -107,64 +110,121 @@
       </div>
 
       <div class="numbers">
-        <div>Estimated Cost: <span class="est" id="estCost">$0</span></div>
-        <div>Cash Available: <span class="cash" id="cashAvail">$1,000</span></div>
+        <div>Estimated Cost: <span class="est" id="estCost">$0.00</span></div>
+        <div>Cash Available: <span class="cash" id="cashAvail">{% if account %}${{ account.cash_balance|floatformat:2 }}{% else %}N/A{% endif %}</span></div>
       </div>
+      
+      <div id="statusMessage" class="warn" style="display:none; color: var(--primary); background: #eff6ff; border: 1px solid #bfdbfe;"></div>
 
-      <button id="buyBtn" class="btn" disabled>Buy</button>
-      <div id="warn" class="warn">Balance too low — insufficient funds.</div>
+      <button id="buyBtn" class="btn" disabled>Execute Buy Order</button>
+      <div id="warnBalance" class="warn">Balance too low — insufficient funds.</div>
 
       <div class="meta" style="margin-top:12px;">
-        Need more cash? <a href="#" style="color:var(--primary-600);font-weight:700;text-decoration:none;">Add Cash to Account</a>
+        Need more cash? <a href="{% url 'deposit_cash' %}" style="color:var(--primary-600);font-weight:700;text-decoration:none;">Add Cash to Account</a>
       </div>
     </section>
   </main>
 
   <script>
-    // Small JS for estimated cost and validation
     const select = document.getElementById('stock');
     const shares = document.getElementById('shares');
     const priceDisplay = document.getElementById('priceDisplay');
     const estCost = document.getElementById('estCost');
     const cashAvailEl = document.getElementById('cashAvail');
     const buyBtn = document.getElementById('buyBtn');
-    const warn = document.getElementById('warn');
+    const warnBalance = document.getElementById('warnBalance');
+    const statusMessage = document.getElementById('statusMessage');
+    const tradeForm = document.getElementById('tradeForm');
+    const tradeTickerInput = document.getElementById('tradeTickerBuy');
+    const tradeQuantityInput = document.getElementById('tradeQuantityBuy');
 
-    let cash = 1000;
-    const fmt = n => '$' + Number(n).toLocaleString();
+    const initialCashString = cashAvailEl.textContent.replace('$', '').replace(/,/g, '');
+    let currentCash = parseFloat(initialCashString) || 0;
+    
+    const fmt = n => '$' + (Number(n).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-    function update() {
+    function updateCalculations() {
       const price = parseFloat(select.value || 0);
       const qty = parseInt(shares.value || 0, 10);
       const total = price * qty;
 
-      priceDisplay.textContent = price ? fmt(price) : '$0';
+      priceDisplay.textContent = fmt(price);
       estCost.textContent = fmt(total);
-      cashAvailEl.textContent = fmt(cash);
+      
+      cashAvailEl.textContent = fmt(currentCash);
 
-      const valid = price > 0 && qty > 0;
-      const enough = total <= cash;
-      warn.style.display = valid && !enough ? 'block' : 'none';
-      buyBtn.disabled = !(valid && enough);
+      const validSelection = price > 0;
+      const validQuantity = qty > 0;
+      const valid = validSelection && validQuantity;
+      const enoughCash = total <= currentCash;
+      
+      warnBalance.style.display = valid && !enoughCash ? 'block' : 'none';
+      buyBtn.disabled = !(valid && enoughCash);
     }
 
-    select.addEventListener('change', update);
-    shares.addEventListener('input', update);
-
+    select.addEventListener('change', updateCalculations);
+    shares.addEventListener('input', updateCalculations);
+    
     buyBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const price = parseFloat(select.value || 0);
-      const qty = parseInt(shares.value || 0, 10);
-      const total = price * qty;
-      if (total <= cash && price && qty) {
-        cash -= total;
-        alert(`Bought ${qty} share(s) for ${fmt(total)}`);
-        shares.value = '';
-        update();
-      }
+        e.preventDefault();
+        
+        const price = parseFloat(select.value || 0);
+        const qty = parseInt(shares.value || 0, 10);
+        const ticker = select.options[select.selectedIndex]?.dataset?.ticker;
+        const total = price * qty;
+
+        if (total > currentCash || !ticker || qty <= 0) {
+            return;
+        }
+
+        tradeTickerInput.value = ticker;
+        tradeQuantityInput.value = qty;
+        
+        buyBtn.disabled = true;
+        buyBtn.textContent = 'Processing...';
+        statusMessage.textContent = 'Executing order...';
+        statusMessage.style.display = 'block';
+
+        fetch(tradeForm.action, {
+            method: 'POST',
+            body: new FormData(tradeForm),
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 200) {
+                currentCash = parseFloat(body.new_cash);
+                statusMessage.className = 'warn';
+                statusMessage.style.color = 'darkgreen';
+                statusMessage.style.background = '#dcfce7';
+                statusMessage.style.borderColor = '#bbf7d0';
+                statusMessage.textContent = body.message + `. New Cash: ${fmt(currentCash)}`;
+                shares.value = ''; 
+            } else {
+                statusMessage.className = 'warn';
+                statusMessage.style.color = '#b91c1c';
+                statusMessage.style.background = '#fee2e2';
+                statusMessage.style.borderColor = '#fecaca';
+                statusMessage.textContent = body.error || `Trade failed with status ${status}.`;
+            }
+        })
+        .catch(error => {
+            statusMessage.className = 'warn';
+            statusMessage.style.color = '#b91c1c';
+            statusMessage.style.background = '#fee2e2';
+            statusMessage.style.borderColor = '#fecaca';
+            statusMessage.textContent = 'A network error occurred. Please try again.';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            buyBtn.textContent = 'Execute Buy Order';
+            shares.value = '';
+            updateCalculations(); 
+            setTimeout(() => {
+            }, 5000);
+        });
     });
 
-    update();
+    updateCalculations();
   </script>
 </body>
 </html>

@@ -28,53 +28,109 @@
       <span class="brand-text">Deposit Cash</span>
     </div>
     <nav class="nav">
-      <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
+      <a href="{% url 'portfolio' %}">Portfolio</a>
       <a href="{% url 'buy_stock' %}">Buy Stock</a>
       <a href="{% url 'sell_stock' %}">Sell Stock</a>
-      <a href="{% url 'deposit_cash' %}">Deposit Cash</a>
+      <a href="{% url 'deposit_cash' %}" class="active">Deposit Cash</a>
       <a href="{% url 'withdraw_cash' %}">Withdraw Cash</a>
       <a href="{% url 'sign_out' %}">Logout</a>
     </nav>
   </header>
 
-  <main class="wrap">
+<main class="wrap">
     <section class="deposit-card">
-      <h2>Deposit Cash</h2>
-      <div class="field">
-        <label for="amount">Enter Amount to Deposit ($)</label>
-        <input id="amount" class="input" type="number" min="1" step="1" placeholder="e.g., 250" />
-      </div>
-      <button id="depositBtn" class="btn" disabled>Deposit</button>
-      <div class="meta">Cash Available: <span id="cashAvail" class="strong">$1,000</span></div>
-      <div id="warn" class="warn">Invalid amount. Please enter a whole number greater than 0.</div>
-      <div id="ok" class="ok">Deposit successful.</div>
+        <h2>Deposit Cash</h2>
+        
+        <form id="cashForm">
+            {% csrf_token %}
+            <input type="hidden" name="type" value="DEPOSIT">
+            <div class="field">
+                <label for="amount">Enter Amount to Deposit ($)</label>
+                <input id="amount" name="amount" class="input" type="number" min="0.01" step="0.01" placeholder="e.g., 250.00" required />
+            </div>
+            <button id="depositBtn" class="btn">Deposit</button>
+        </form>
+
+        <div class="meta">Cash Available: <span id="cashAvail" class="strong">{% if account %}${{ account.cash_balance|floatformat:2 }}{% else %}$0.00{% endif %}</span></div>
+        <div id="warn" class="warn">Invalid amount. Please enter a whole number greater than 0.</div>
+        <div id="ok" class="ok">Deposit successful.</div>
     </section>
-  </main>
+</main>
 
   <script>
-    let cash = 1000;
-    const amount = document.getElementById('amount');
-    const btn = document.getElementById('depositBtn');
-    const cashAvail = document.getElementById('cashAvail');
-    const warn = document.getElementById('warn');
-    const ok = document.getElementById('ok');
-    const fmt = n => '$' + Number(n).toLocaleString();
-    function validate(){
-      const n = Number(amount.value);
-      const valid = Number.isInteger(n) && n > 0;
-      btn.disabled = !valid;
-      warn.style.display = valid ? 'none' : (amount.value ? 'block' : 'none');
-      ok.style.display = 'none';
+    const amountInput = document.getElementById('amount');
+    const depositBtn = document.getElementById('depositBtn');
+    const cashAvailEl = document.getElementById('cashAvail');
+    const warnEl = document.getElementById('warn');
+    const okEl = document.getElementById('ok');     
+    const cashForm = document.getElementById('cashForm');
+
+    const initialCashString = cashAvailEl.textContent.replace('$', '').replace(/,/g, '');
+    let currentCash = parseFloat(initialCashString) || 0;
+    
+    const fmt = n => '$' + (Number(n).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    function updateCashDisplay() {
+        cashAvailEl.textContent = fmt(currentCash);
     }
-    amount.addEventListener('input', validate);
-    btn.addEventListener('click', (e)=>{
-      e.preventDefault();
-      const n = Number(amount.value);
-      if (!Number.isInteger(n) || n <= 0){ validate(); return; }
-      cash += n; cashAvail.textContent = fmt(cash); amount.value=''; validate(); ok.style.display='block';
+
+    function validate() {
+        const n = parseFloat(amountInput.value);
+        const valid = n > 0;
+        depositBtn.disabled = !valid;
+        
+      
+        warnEl.style.display = 'none';
+        okEl.style.display = 'none';
+    }
+
+    amountInput.addEventListener('input', validate);
+
+    cashForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const amount = parseFloat(amountInput.value);
+        if (!(amount > 0)) { validate(); return; } 
+
+        depositBtn.disabled = true;
+        depositBtn.textContent = 'Processing...';
+        warnEl.style.display = 'none';
+        okEl.textContent = 'Processing deposit...';
+        okEl.style.display = 'block';
+
+        fetch('/api/v1/accounts/deposit/', { 
+            method: 'POST',
+            body: new FormData(cashForm),
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 200) {
+                currentCash = parseFloat(body.new_cash);
+                updateCashDisplay();
+                okEl.textContent = body.message + `. New Balance: ${fmt(currentCash)}`;
+                okEl.className = 'ok'; 
+                warnEl.style.display = 'none';
+                amountInput.value = ''; 
+            } else {
+                warnEl.textContent = body.error || `Transaction failed with status ${status}.`;
+                warnEl.style.display = 'block';
+                okEl.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            warnEl.textContent = 'A network error occurred. Please try again.';
+            warnEl.style.display = 'block';
+            okEl.style.display = 'none';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            depositBtn.textContent = 'Deposit';
+            validate(); 
+        });
     });
-    cashAvail.textContent = fmt(cash);
+
+    updateCashDisplay();
     validate();
-  </script>
+</script>
 </body>
 </html>

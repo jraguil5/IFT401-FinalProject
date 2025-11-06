@@ -9,7 +9,7 @@ from customer.views import (
     portfolio_view, buy_stock_view, sell_stock_view, 
     deposit_cash_view, withdraw_cash_view, 
     admin_change_market_hours_view, admin_create_stock_view,
-    role_based_redirect
+    role_based_redirect, sign_out_user, admin_create_stock_api
 )
 
 router = DefaultRouter()
@@ -25,7 +25,7 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('sign_in/', auth_views.LoginView.as_view(template_name='customer/sign_in.html'), name='sign_in'),
-    path('sign_out/', auth_views.LogoutView.as_view(next_page='/sign_in/'), name='sign_out'),
+    path('sign_out/', sign_out_user, name='sign_out'),
     path('sign_up/', register_user, name='register'),
     path("api/v1/", include(router.urls)),
     path("api-auth/", include('rest_framework.urls')),
@@ -37,5 +37,6 @@ urlpatterns = [
     path('role_router/', role_based_redirect, name='role_based_redirect'),
     path('admin_dashboard/', admin_dashboard_view, name='admin_dashboard'),
     path('admin_market_hours/', admin_change_market_hours_view, name='admin_change_market_hours'),
-    path('admin_create_stock/', admin_create_stock_view, name='admin_create_stock'), 
+    path('admin_create_stock/', admin_create_stock_view, name='admin_create_stock'),
+    path('api/v1/admin/create_stock/', admin_create_stock_api, name='api_admin_create_stock'),
 ]

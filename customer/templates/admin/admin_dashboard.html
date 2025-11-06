@@ -7,33 +7,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
     <style>
-        .admin-card{
-            max-width: 720px; margin:24px auto;
-            background: var(--panel); border:1px solid var(--border);
-            border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
-            padding:24px; text-align: center; 
+        .admin-card {
+            max-width: 640px;
+            margin: 60px auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.15);
+            padding: 40px;
+            text-align: center;
         }
-        .admin-card h2{ margin:0 0 16px; }
-        
+        .admin-card h2 {
+            margin: 0 0 24px;
+            color: var(--ink);
+        }
+        .construction-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
         .construction-message {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: var(--primary);
             padding: 20px;
             border: 2px dashed var(--primary);
             border-radius: 8px;
-            margin: 20px 0;
-            display: inline-block;
+            margin: 24px 0;
         }
         .admin-links {
-            margin-top: 30px;
+            margin-top: 32px;
             display: flex;
-            justify-content: center;
-            gap: 20px;
+            flex-direction: column;
+            gap: 12px;
         }
         .admin-links a {
             text-decoration: none;
             color: var(--primary);
             font-weight: 600;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: background .15s;
+        }
+        .admin-links a:hover {
+            background: var(--surface);
         }
     </style>
 </head>
@@ -50,20 +66,23 @@
             <a href="{% url 'sign_out' %}">Logout</a>
         </nav>
     </header>
-
+    
     <main class="wrap">
         <div class="admin-card">
-            <h2>Welcome, Administrator</h2>
+            <div class="construction-icon">🚧</div>
+            <h2>Administrator Dashboard</h2>
             
             <div class="construction-message">
-                Admin Dashboard is Under Construction 
+                Dashboard Under Development
             </div>
-
-            <p>Please use the links below or the navigation bar to access available administration tools.</p>
+            
+            <p style="color: var(--muted);">
+                Use the navigation bar or links below to access admin functions.
+            </p>
             
             <div class="admin-links">
-                <a href="{% url 'admin_create_stock' %}">Manage Stocks</a> |
-                <a href="{% url 'admin_change_market_hours' %}">Change Market Schedule</a>
+                <a href="{% url 'admin_create_stock' %}">Create New Stock</a>
+                <a href="{% url 'admin_change_market_hours' %}">Change Market Hours</a>
             </div>
         </div>
     </main>

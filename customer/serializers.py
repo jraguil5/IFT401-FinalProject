@@ -13,6 +13,7 @@ class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
         fields = '__all__'
+        read_only_fields = ['id', 'initial_price', 'opening_price', 'day_high', 'day_low']
 
 class PositionSerializer(serializers.ModelSerializer):
     stock_ticker = serializers.CharField(source='stock.ticker') 

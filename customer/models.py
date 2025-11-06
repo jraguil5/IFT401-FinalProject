@@ -100,7 +100,7 @@ class Stock(models.Model):
 # Brokerage Account Model
 class BrokerageAccount(models.Model):
     AccountID = models.BigIntegerField(primary_key=True, db_column='AccountID')
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID') # Cascades on user delete
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='account', db_column='UserID')
     cash_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0, db_column='Balance')
     
     class Meta:
@@ -136,7 +136,7 @@ class Position(models.Model):
 
 # Transaction Model
 class Transaction(models.Model):
-    TRANSACTION_TYPES = [('DEPOSIT', 'Deposit'), ('WITHDRAW', 'Withdraw')]
+    TRANSACTION_TYPES = [('DEPOSIT', 'Deposit'), ('WITHDRAW', 'Withdraw'), ('STOCK_TRADE', 'Stock Trade')]
 
     id = models.BigIntegerField(primary_key=True, db_column='TransactionID')
     account = models.ForeignKey(BrokerageAccount, on_delete=models.CASCADE, related_name='transactions', db_column='AccountID')

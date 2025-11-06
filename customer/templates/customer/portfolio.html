@@ -1,21 +1,19 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Shareholder Portfolio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}">
 </head>
-
 <body class="portfolio">
-  <!-- Single header: logo left, nav right -->
   <header class="site-header">
     <div class="brand">
-      <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
+      <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo">
       <span class="brand-text">Shareholder Portfolio</span>
     </div>
-
     <nav class="nav">
       <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
       <a href="{% url 'buy_stock' %}">Buy Stock</a>
@@ -27,11 +25,9 @@
   </header>
 
   <main class="wrap">
-    <!-- Main two-column area -->
     <section class="grid">
-      <!-- Holdings table -->
       <div class="card">
-        <h2>Portfolio</h2>
+        <h2>Portfolio Holdings</h2>
         <div class="table-wrap">
           <table class="table">
             <thead>
@@ -41,45 +37,40 @@
                 <th>Shares</th>
                 <th>Current Price</th>
                 <th>Total Value</th>
-                <th>% Change</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Apple</td><td>AAPL</td><td>10</td><td>$190</td><td>$1,900</td><td class="pos">+2.3%</td>
-              </tr>
-              <tr>
-                <td>Tesla</td><td>TSLA</td><td>5</td><td>$250</td><td>$1,250</td><td class="neg">-1.2%</td>
-              </tr>
-              <tr>
-                <td>Microsoft</td><td>MSFT</td><td>8</td><td>$310</td><td>$2,480</td><td class="neg">-0.8%</td>
-              </tr>
-              <tr>
-                <td>Amazon</td><td>AMZN</td><td>3</td><td>$145</td><td>$435</td><td class="pos">+0.6%</td>
-              </tr>
-              <tr>
-                <td>Meta</td><td>META</td><td>6</td><td>$300</td><td>$1,800</td><td class="pos">+2.7%</td>
-              </tr>
+              {% if positions %}
+                {% for position in positions %}
+                <tr>
+                  <td>{{ position.stock.name }}</td>
+                  <td>{{ position.stock.ticker }}</td>
+                  <td>{{ position.quantity }}</td>
+                  <td>${{ position.stock.current_price|floatformat:2 }}</td>
+                  <td>${{ position.market_value|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="5">No stock holdings found.</td>
+                </tr>
+              {% endif %}
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Chart placeholder -->
       <div class="card">
         <h2>Asset Growth</h2>
-        <!-- simple SVG placeholder chart -->
         <div class="chart">
           <svg viewBox="0 0 400 220" preserveAspectRatio="none">
             <rect x="0" y="0" width="400" height="220" class="chart-bg"/>
-            <!-- grid lines -->
             <g stroke="currentColor" opacity="0.12">
               <line x1="0" y1="180" x2="400" y2="180"/>
               <line x1="0" y1="140" x2="400" y2="140"/>
               <line x1="0" y1="100" x2="400" y2="100"/>
-              <line x1="0" y1="60"  x2="400" y2="60"/>
+              <line x1="0" y1="60" x2="400" y2="60"/>
             </g>
-            <!-- the line -->
             <polyline class="line"
               points="10,170 70,150 130,160 190,120 250,130 310,80 370,95"
               fill="none"/>
@@ -88,27 +79,41 @@
       </div>
     </section>
 
-    <!-- Summary metrics -->
     <section class="summary">
-      <div class="metric"><span>Cash Balance:</span> <strong>$1,500</strong></div>
-      <div class="metric"><span>Total Portfolio Value:</span> <strong>$7,865</strong></div>
-      <div class="metric"><span>Overall Account Value:</span> <strong>$9,365</strong></div>
+      <div class="metric"><span>Cash Balance:</span> <strong>${{ account.cash_balance|default:"0.00"|floatformat:2|intcomma }}</strong></div>
+      <div class="metric"><span>Total Portfolio Value:</span> <strong>${{ total_market_value|default:"0.00"|floatformat:2|intcomma }}</strong></div>
+      <div class="metric"><span>Overall Account Value:</span> <strong>${{ total_equity|default:"0.00"|floatformat:2|intcomma }}</strong></div>
     </section>
 
-    <!-- Transaction history -->
     <section class="card">
-      <h2>Transaction History</h2>
+      <h2>Recent Activity</h2>
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th>Date</th><th>Type</th><th>Stock</th><th>Amount</th><th>Price</th><th>Balance After</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Stock</th>
+              <th>Qty</th>
+              <th>Price</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>08/01/25</td><td>Buy</td><td>AAPL</td><td>10</td><td>$190</td><td>$1,160</td></tr>
-            <tr><td>08/07/25</td><td>Deposit</td><td>—</td><td>$500</td><td>—</td><td>$1,660</td></tr>
-            <tr><td>08/15/25</td><td>Sell</td><td>TSLA</td><td>1</td><td>$250</td><td>$1,910</td></tr>
+            {% if recent_orders %}
+              {% for order in recent_orders %}
+              <tr>
+                <td>{{ order.created_at|date:"m/d/y" }}</td>
+                <td>{{ order.action }}</td>
+                <td>{{ order.stock.ticker }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>${{ order.executed_price|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5">No recent activity</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>

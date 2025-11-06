@@ -71,82 +71,124 @@
       <span class="brand-text">Withdraw Cash</span>
     </div>
     <nav class="nav">
-      <a href="{% url 'portfolio' %}" class="active">Portfolio</a>
+      <a href="{% url 'portfolio' %}">Portfolio</a>
       <a href="{% url 'buy_stock' %}">Buy Stock</a>
       <a href="{% url 'sell_stock' %}">Sell Stock</a>
       <a href="{% url 'deposit_cash' %}">Deposit Cash</a>
-      <a href="{% url 'withdraw_cash' %}">Withdraw Cash</a>
+      <a href="{% url 'withdraw_cash' %}" class="active">Withdraw Cash</a>
       <a href="{% url 'sign_out' %}">Logout</a>
     </nav>
   </header>
 
   <main class="wrap">
-    <section class="withdraw-card">
-      <h2>Withdraw Cash</h2>
+        <section class="withdraw-card">
+            <h2>Withdraw Cash</h2>
 
-      <div class="field">
-        <label for="amount">Enter Amount to Withdraw ($)</label>
-        <input id="amount" class="input" type="number" min="1" step="1" placeholder="e.g., 200" />
-      </div>
+            <form id="cashForm">
+                {% csrf_token %}
+                <input type="hidden" name="type" value="WITHDRAW">
+                
+                <div class="field">
+                    <label for="amount">Enter Amount to Withdraw ($)</label>
+                    <input id="amount" name="amount" class="input" type="number" min="0.01" step="0.01" placeholder="e.g., 200.00" required />
+                </div>
+                
+                <button id="withdrawBtn" class="btn" disabled>Withdraw</button>
+            </form>
 
-      <button id="withdrawBtn" class="btn" disabled>Withdraw</button>
+            <div class="meta">
+                Cash Available: <span id="cashAvail" class="strong">
+                    {% if account %}${{ account.cash_balance|floatformat:2 }}{% else %}$0.00{% endif %}
+                </span>
+            </div>
 
-      <div class="meta">Cash Available: <span id="cashAvail" class="strong">$1,000</span></div>
+            <div id="warn" class="warn"></div>
+            <div id="ok" class="ok"></div>
+        </section>
+    </main>
 
-      <div id="warn" class="warn"></div>
-      <div id="ok" class="ok">Withdrawal successful.</div>
-    </section>
-  </main>
+    <script>
+        const amountInput = document.getElementById('amount');
+        const withdrawBtn = document.getElementById('withdrawBtn');
+        const cashAvailEl = document.getElementById('cashAvail');
+        const warnEl = document.getElementById('warn');
+        const okEl = document.getElementById('ok');
+        const cashForm = document.getElementById('cashForm');
 
-  <script>
-    // Simple demo state (replace with real app state later)
-    let cash = 1000;
+        const initialCashString = cashAvailEl.textContent.replace('$', '').replace(/,/g, '');
+        let currentCash = parseFloat(initialCashString) || 0;
+      
+        const fmt = n => '$' + (Number(n).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-    const amount = document.getElementById('amount');
-    const btn = document.getElementById('withdrawBtn');
-    const cashAvail = document.getElementById('cashAvail');
-    const warn = document.getElementById('warn');
-    const ok = document.getElementById('ok');
+        function updateCashDisplay() {
+            cashAvailEl.textContent = fmt(currentCash);
+        }
 
-    const fmt = n => '$' + Number(n).toLocaleString();
+        function validate() {
+            const n = parseFloat(amountInput.value);
+            const valid = n > 0 && n <= currentCash;
+            
+            withdrawBtn.disabled = !valid;
+            
+            warnEl.style.display = 'none';
+            okEl.style.display = 'none';
 
-    function validate() {
-      const val = amount.value.trim();
-      const n = Number(val);
-      const isInt = Number.isInteger(n);
-      const valid = isInt && n > 0;
+            if (amountInput.value && n > currentCash) {
+                warnEl.textContent = 'Insufficient funds for this withdrawal.';
+                warnEl.style.display = 'block';
+            } else if (amountInput.value && n <= 0) {
+                warnEl.textContent = 'Amount must be greater than $0.00.';
+                warnEl.style.display = 'block';
+            }
+        }
 
-      btn.disabled = !valid;
-      warn.style.display = valid ? 'none' : (val ? 'block' : 'none');
-      warn.textContent = valid ? '' : 'Invalid amount. Please enter a whole number greater than 0.';
-      ok.style.display = 'none';
-    }
+        amountInput.addEventListener('input', validate);
 
-    amount.addEventListener('input', validate);
+        cashForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const amount = parseFloat(amountInput.value);
+            if (!(amount > 0 && amount <= currentCash)) { validate(); return; }
 
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const n = Number(amount.value);
-      if (!Number.isInteger(n) || n <= 0) { validate(); return; }
+            withdrawBtn.disabled = true;
+            withdrawBtn.textContent = 'Processing...';
+            warnEl.style.display = 'none';
+            okEl.textContent = 'Processing withdrawal...';
+            okEl.style.display = 'block';
 
-      if (n > cash) {
-        warn.textContent = 'Insufficient funds for this withdrawal.';
-        warn.style.display = 'block';
-        ok.style.display = 'none';
-        return;
-      }
+            fetch('/api/v1/accounts/withdraw/', {
+                method: 'POST',
+                body: new FormData(cashForm),
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 200) {
+                    currentCash = parseFloat(body.new_cash);
+                    updateCashDisplay();
+                    okEl.textContent = body.message + `. New Balance: ${fmt(currentCash)}`;
+                    okEl.style.display = 'block';
+                    warnEl.style.display = 'none';
+                    amountInput.value = ''; 
+                } else {
+                    warnEl.textContent = body.error || `Transaction failed with status ${status}.`;
+                    warnEl.style.display = 'block';
+                    okEl.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                warnEl.textContent = 'A network error occurred. Please try again.';
+                warnEl.style.display = 'block';
+                okEl.style.display = 'none';
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                withdrawBtn.textContent = 'Withdraw';
+                validate(); 
+            });
+        });
 
-      cash -= n;
-      cashAvail.textContent = fmt(cash);
-      amount.value = '';
-      validate();
-      warn.style.display = 'none';
-      ok.style.display = 'block';
-    });
-
-    // init
-    cashAvail.textContent = fmt(cash);
-    validate();
-  </script>
+        updateCashDisplay();
+        validate();
+    </script>
 </body>
 </html>
