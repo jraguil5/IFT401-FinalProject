@@ -40,10 +40,11 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             stock = Stock.objects.get(ticker=ticker)
             quantity = int(quantity)
-            if quantity <= 0:
-                raise ValueError("Quantity must be positive.")
         except (Stock.DoesNotExist, ValueError):
             return Response({"error": "Invalid stock ticker or quantity"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if quantity <= 0:
+            return Response({"error": "Quantity must be positive"}, status=status.HTTP_400_BAD_REQUEST)
 
         current_price = Decimal(stock.current_price)
         total_cost = current_price * Decimal(quantity)
@@ -198,7 +199,7 @@ class BrokerageAccountViewSet(viewsets.ReadOnlyModelViewSet):
                 }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response({"error": "An internal error occurred during deposit."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": "Deposit failed!"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
     def withdraw(self, request):
