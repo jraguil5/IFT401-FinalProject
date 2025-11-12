@@ -5,7 +5,7 @@ env:
     DB_NAME: investrio_dev_db
     DB_USER: admin
     DB_PASSWORD: H9?6iDXqF8h&
-    DB_HOST: 127.0.0.1
+    DB_HOST: investrio-dev-db.cu5mgcywcnjd.us-east-1.rds.amazonaws.com
     DB_PORT: 3306
     SECRET_KEY: 2f$3*18_^ox^0^t7ms3gfpk30-1j4#n@6jz$dgvl#swty#g_2
     DEBUG: False
