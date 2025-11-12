@@ -1,0 +1,15 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - mkdir -p static
+    build:
+      commands:
+        - echo "Amplify connection to GitHub" > static/health.txt
+  artifacts:
+    baseDirectory: .
+    files:
+      - "static/**"
+  cache:
+    paths: []
