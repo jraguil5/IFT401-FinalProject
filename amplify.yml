@@ -3,19 +3,24 @@ backend:
   phases:
     build:
       commands:
+        - echo "Starting backend build..."
         - pip install --upgrade pip
         - pip install -r requirements.txt
-        - python manage.py migrate --noinput
         - python manage.py collectstatic --noinput
+  env:
+    variables:
+      DJANGO_SETTINGS_MODULE: investr.settings
 frontend:
   phases:
     preBuild:
       commands:
-        - pip install --upgrade pip
+        - echo "Installing dependencies..."
         - pip install -r requirements.txt
     build:
       commands:
-        - echo "Build complete for Django backend"
+        - echo "Running migrations..."
+        - python manage.py migrate --noinput
+        - python manage.py collectstatic --noinput
   artifacts:
     baseDirectory: staticfiles
     files:
@@ -23,3 +28,6 @@ frontend:
   cache:
     paths:
       - .cache/pip
+  env:
+    variables:
+      DJANGO_SETTINGS_MODULE: investr.settings
