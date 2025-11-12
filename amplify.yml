@@ -1,15 +1,23 @@
 version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - pip install -r requirements.txt
+        - python manage.py collectstatic --noinput
 frontend:
   phases:
     preBuild:
       commands:
-        - mkdir -p static
+        - pip install -r requirements.txt
     build:
       commands:
-        - echo "Amplify connection to GitHub" > static/health.txt
+        - python manage.py migrate --noinput
+        - python manage.py collectstatic --noinput
   artifacts:
-    baseDirectory: .
+    baseDirectory: staticfiles
     files:
-      - "static/**"
+      - '**/*'
   cache:
-    paths: []
+    paths:
+      - .cache/pip
