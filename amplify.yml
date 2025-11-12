@@ -3,17 +3,19 @@ backend:
   phases:
     build:
       commands:
+        - pip install --upgrade pip
         - pip install -r requirements.txt
+        - python manage.py migrate --noinput
         - python manage.py collectstatic --noinput
 frontend:
   phases:
     preBuild:
       commands:
+        - pip install --upgrade pip
         - pip install -r requirements.txt
     build:
       commands:
-        - python manage.py migrate --noinput
-        - python manage.py collectstatic --noinput
+        - echo "Build complete for Django backend"
   artifacts:
     baseDirectory: staticfiles
     files:
