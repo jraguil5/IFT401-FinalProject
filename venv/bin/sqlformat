@@ -1,4 +1,6 @@
-#!/Users/jorgeaguilar/Desktop/IFT401-FinalProject/venv/bin/python3
+#!/bin/sh
+'''exec' "/Users/richard.lahaie/Arizona State/Fall 2025/IFT401/IFT401-FinalProject/venv/bin/python" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys
