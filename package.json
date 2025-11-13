@@ -21,5 +21,8 @@
     "@aws-amplify/backend": "^1.18.0",
     "@aws-amplify/backend-cli": "^1.8.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@parcel/watcher": "2.1.0"
   }
 }
