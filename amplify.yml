@@ -1,18 +1,12 @@
 version: 1
 env:
   variables:
-    DJANGO_SETTINGS_MODULE: investr.settings
-    DB_NAME: investrio_dev_db
-    DB_USER: admin
-    DB_HOST: investrio-dev-db.cu5mgcywcnjd.us-east-1.rds.amazonaws.com
-    DB_PORT: 3306
-    DEBUG: False
     AMPLIFY_BACKEND_BUILD_OUTPUT_BUCKET: "" 
 backend:
   phases:
     install:
       commands:
-        - npm ci
+        - npm install 
     build:
       commands:
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID 
