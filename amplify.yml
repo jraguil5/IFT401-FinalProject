@@ -3,13 +3,10 @@ env:
   variables:
     AMPLIFY_BACKEND_BUILD_OUTPUT_BUCKET: "" 
 backend:
+  runtime-version: 20
   phases:
     install:
       commands:
-        - . "$NVM_DIR/nvm.sh"
-        - nvm install 20
-        - nvm use 20
-        - node -v
         - npm install 
     build:
       commands:
