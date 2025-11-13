@@ -1,0 +1,25 @@
+{
+  "name": "ift401-finalproject",
+  "version": "1.0.0",
+  "description": "ReadMe File for IFT401 Project - Team Aguilar Lahaie Olson - Fall 2025 Arizona State University",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jraguil5/IFT401-FinalProject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jraguil5/IFT401-FinalProject/issues"
+  },
+  "homepage": "https://github.com/jraguil5/IFT401-FinalProject#readme",
+  "devDependencies": {
+    "@aws-amplify/backend": "^1.18.0",
+    "@aws-amplify/backend-cli": "^1.8.0",
+    "typescript": "^5.9.3"
+  }
+}
