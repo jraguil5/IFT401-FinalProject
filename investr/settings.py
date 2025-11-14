@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 import pymysql
+import os
 pymysql.install_as_MySQLdb()
 
 
@@ -30,7 +31,7 @@ SECRET_KEY = 'django-insecure-6jxynsxd=z6bcuf0)p19$u$n26+o%wy_n69943zk_95(x5t1qc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -166,4 +167,8 @@ AUTH_USER_MODEL = 'customer.CustomUser'
 LOGIN_URL = '/sign_in/'
 
 LOGIN_REDIRECT_URL = '/role_router/'
+
+if 'RDS_HOSTNAME' in os.environ:
+    # Production settings (Elastic Beanstalk with RDS)
+    DEBUG = False
 
