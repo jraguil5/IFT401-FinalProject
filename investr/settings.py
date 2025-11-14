@@ -14,9 +14,9 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config
 import pymysql
-import os
 pymysql.install_as_MySQLdb()
-
+import os
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,8 +31,13 @@ SECRET_KEY = 'django-insecure-6jxynsxd=z6bcuf0)p19$u$n26+o%wy_n69943zk_95(x5t1qc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.elasticbeanstalk.com',
+    '.us-east-1.elb.amazonaws.com',  # Add your region
+    '*'  # Temporary - remove in production
+]
 
 # Application definition
 
@@ -83,16 +88,27 @@ WSGI_APPLICATION = 'investr.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  
-        'NAME': 'investrio-dev-db',
-        'USER': 'admin',
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': 'investrio-dev-db.cu5mgcywcnjd.us-east-1.rds.amazonaws.com',     
-        'PORT': '3306',                        
+if os.environ.get('RDS_HOSTNAME'):
+    # Production - use RDS MySQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('RDS_DB_NAME'),
+            'USER': os.environ.get('RDS_USERNAME'),
+            'PASSWORD': os.environ.get('RDS_PASSWORD'),
+            'HOST': os.environ.get('RDS_HOSTNAME'),
+            'PORT': os.environ.get('RDS_PORT'),
+        }
     }
-}
+else:
+    # Local development - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
 
 
 # Password validation
@@ -129,7 +145,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# Static files configuration
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Point to your nested static folder
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'customer', 'static'),  # Path to customer/static/
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -167,8 +190,3 @@ AUTH_USER_MODEL = 'customer.CustomUser'
 LOGIN_URL = '/sign_in/'
 
 LOGIN_REDIRECT_URL = '/role_router/'
-
-if 'RDS_HOSTNAME' in os.environ:
-    # Production settings (Elastic Beanstalk with RDS)
-    DEBUG = False
-
