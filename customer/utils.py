@@ -1,0 +1,84 @@
+from django.utils import timezone
+from datetime import time
+from .models import MarketSchedule
+
+def is_market_open():
+    now = timezone.now()
+    current_time = now.time()
+    current_weekday = now.weekday()  # 0=Monday, 6=Sunday
+    
+    try:
+        # Get the market schedule from database
+        schedule = MarketSchedule.objects.first()
+        
+        if not schedule:
+            return False, "Market schedule not configured"
+        
+        # Check if it's the weekend (disabled for testing on weekends)
+        # if current_weekday >= 5:
+        #     return False, "Market is closed on weekends"
+        
+        # Check if today is a holiday
+        if schedule.Holiday:  # CHANGED from schedule.holiday
+            return False, "Market is closed for holiday"
+        
+        # Check if admin has manually closed the market
+        if schedule.Status.upper() == 'CLOSED': 
+            return False, "Market is currently closed"
+        
+        # Create time objects for market hours
+        market_open = time(schedule.OpenHour, schedule.OpenMinute)  
+        market_close = time(schedule.CloseHour, schedule.CloseMinute)  
+        
+        # Check if current time is before market open
+        if current_time < market_open:
+            return False, f"Market opens at {market_open.strftime('%I:%M %p')}"
+        
+        # Check if current time is after market close
+        if current_time > market_close:
+            return False, f"Market closed at {market_close.strftime('%I:%M %p')}"
+        
+        # If we made it here, market is open!
+        return True, "Market is open"
+        
+    except Exception as e:
+        # Something went wrong, return error
+        return False, f"Error checking market hours: {str(e)}"
+
+
+def get_market_status():
+    """
+    Get detailed market status information
+    Used by the frontend to display market status
+    """
+    is_open, message = is_market_open()
+    
+    try:
+        schedule = MarketSchedule.objects.first()
+        if schedule:
+            return {
+                'is_open': is_open,
+                'message': message,
+                'open_time': f"{schedule.OpenHour:02d}:{schedule.OpenMinute:02d}",  
+                'close_time': f"{schedule.CloseHour:02d}:{schedule.CloseMinute:02d}", 
+                'status': schedule.Status,  
+                'is_holiday': schedule.Holiday  
+            }
+        else:
+            return {
+                'is_open': False,
+                'message': 'Market schedule not configured',
+                'open_time': None,
+                'close_time': None,
+                'status': 'UNKNOWN',
+                'is_holiday': False
+            }
+    except Exception as e:
+        return {
+            'is_open': False,
+            'message': f'Error: {str(e)}',
+            'open_time': None,
+            'close_time': None,
+            'status': 'ERROR',
+            'is_holiday': False
+        }
