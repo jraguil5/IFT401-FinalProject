@@ -3,6 +3,7 @@ from datetime import time
 from .models import MarketSchedule
 
 def is_market_open():
+    """Check if market is open right now"""
     now = timezone.now()
     current_time = now.time()
     current_weekday = now.weekday()  # 0=Monday, 6=Sunday
@@ -14,43 +15,34 @@ def is_market_open():
         if not schedule:
             return False, "Market schedule not configured"
         
-        # Check if it's the weekend (disabled for testing on weekends)
-        # if current_weekday >= 5:
-        #     return False, "Market is closed on weekends"
+         if current_weekday >= 5:
+             return False, "Market is closed on weekends"
         
-        # Check if today is a holiday
-        if schedule.Holiday:  # CHANGED from schedule.holiday
-            return False, "Market is closed for holiday"
+        # for holiday, can be added later
+        #if schedule.Holiday:
+        #    return False, "Market is closed for holiday"
         
-        # Check if admin has manually closed the market
+        # Check if admin manually closed the market
         if schedule.Status.upper() == 'CLOSED': 
             return False, "Market is currently closed"
         
-        # Create time objects for market hours
-        market_open = time(schedule.OpenHour, schedule.OpenMinute)  
-        market_close = time(schedule.CloseHour, schedule.CloseMinute)  
+        market_open = time(schedule.OpenHour, schedule.OpenMinute)
+        market_close = time(schedule.CloseHour, schedule.CloseMinute)
         
-        # Check if current time is before market open
         if current_time < market_open:
             return False, f"Market opens at {market_open.strftime('%I:%M %p')}"
         
-        # Check if current time is after market close
         if current_time > market_close:
             return False, f"Market closed at {market_close.strftime('%I:%M %p')}"
         
-        # If we made it here, market is open!
         return True, "Market is open"
         
     except Exception as e:
-        # Something went wrong, return error
         return False, f"Error checking market hours: {str(e)}"
 
 
 def get_market_status():
-    """
-    Get detailed market status information
-    Used by the frontend to display market status
-    """
+    """Get market status info for display on frontend pages"""
     is_open, message = is_market_open()
     
     try:
@@ -59,10 +51,10 @@ def get_market_status():
             return {
                 'is_open': is_open,
                 'message': message,
-                'open_time': f"{schedule.OpenHour:02d}:{schedule.OpenMinute:02d}",  
-                'close_time': f"{schedule.CloseHour:02d}:{schedule.CloseMinute:02d}", 
-                'status': schedule.Status,  
-                'is_holiday': schedule.Holiday  
+                'open_time': f"{schedule.OpenHour:02d}:{schedule.OpenMinute:02d}",
+                'close_time': f"{schedule.CloseHour:02d}:{schedule.CloseMinute:02d}",
+                'status': schedule.Status,
+                'is_holiday': schedule.Holiday
             }
         else:
             return {
