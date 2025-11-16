@@ -5,7 +5,6 @@ from django.db import transaction
 from django.db.models import Max
 from customer.models import Stock, PriceTick
 
-
 class Command(BaseCommand):
     help = "Update stock prices with random fluctuations"
     
@@ -18,7 +17,7 @@ class Command(BaseCommand):
         )
     
     def handle(self, *args, **options):
-        volatility = options['volatility'] / 100  # Convert to decimal
+        volatility = options['volatility'] / 100
         
         stocks = Stock.objects.all()
         if not stocks:
@@ -26,7 +25,7 @@ class Command(BaseCommand):
             return
         
         with transaction.atomic():
-            # Get next tick ID
+            # Figure out next PriceTick ID - start at 5 billion if none exist
             last_tick_id = PriceTick.objects.aggregate(Max('id'))['id__max']
             next_tick_id = (last_tick_id or 5_000_000_000) + 1
             
@@ -34,15 +33,12 @@ class Command(BaseCommand):
             updated = 0
             
             for stock in stocks:
-                # Random price change within volatility range
                 change = Decimal(str(random.uniform(-volatility, volatility)))
                 new_price = stock.current_price * (1 + change)
                 
-                # Don't go below $0.01
                 new_price = max(new_price, Decimal("0.01"))
                 new_price = new_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 
-                # Update day high/low
                 if new_price > stock.day_high:
                     stock.day_high = new_price
                 if new_price < stock.day_low:
