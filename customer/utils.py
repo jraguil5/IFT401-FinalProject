@@ -15,7 +15,7 @@ def is_market_open():
         if not schedule:
             return False, "Market schedule not configured"
         
-         if current_weekday >= 5:
+        if current_weekday >= 5:
              return False, "Market is closed on weekends"
         
         # for holiday, can be added later
