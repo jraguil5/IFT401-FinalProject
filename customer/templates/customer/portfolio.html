@@ -100,13 +100,19 @@
           </thead>
           <tbody>
             {% if recent_orders %}
-              {% for order in recent_orders %}
+              {% for activity in recent_orders %}
               <tr>
-                <td>{{ order.created_at|date:"m/d/y" }}</td>
-                <td>{{ order.action }}</td>
-                <td>{{ order.stock.ticker }}</td>
-                <td>{{ order.quantity }}</td>
-                <td>${{ order.executed_price|floatformat:2 }}</td>
+                <td>
+                  {% if activity.date == 'Recent' %}
+                    Recent
+                  {% else %}
+                    {{ activity.date|date:"m/d/y" }}
+                  {% endif %}
+                </td>
+                <td>{{ activity.type }}</td>
+                <td>{{ activity.stock }}</td>
+                <td>{{ activity.quantity }}</td>
+                <td>${{ activity.price|floatformat:2 }}</td>
               </tr>
               {% endfor %}
             {% else %}

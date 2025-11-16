@@ -5,46 +5,9 @@
   <meta charset="UTF-8" />
   <title>ADMIN • Change Market Hours</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
-  <style>
-    .admin-card{
-      max-width: 720px; margin:24px auto;
-      background: var(--panel); border:1px solid var(--border);
-      border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.15);
-      padding:24px;
-    }
-    .admin-card h2{ margin:0 0 16px; }
-
-    .grid-form{
-      display:grid; grid-template-columns: 220px 1fr; gap: 12px 16px; align-items:center;
-    }
-    .grid-form label{ font-weight:600; }
-
-    .input{
-      width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px;
-      background: var(--surface); outline:none; font-size:1rem; box-sizing:border-box;
-      transition: box-shadow .15s, border-color .15s;
-    }
-    .input:focus{ border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
-
-    .btn-row{ display:flex; gap:12px; margin-top: 14px; }
-    .btn{
-      padding:12px 16px; background: var(--primary); color:#fff; border:0; border-radius:8px;
-      font-weight:700; cursor:pointer; transition: background .15s, transform .02s;
-    }
-    .btn:hover{ background: var(--primary-600); }
-    .btn.secondary{ background:#e5e7eb; color:#111827; }
-
-    .warn, .ok{
-      margin-top:12px; padding:10px 12px; border-radius:8px; display:none;
-    }
-    .warn{ color:#b91c1c; background:#fee2e2; border:1px solid #fecaca; }
-    .ok{ color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; }
-    .hint{ color: var(--muted); font-size:.9rem; grid-column: 2; margin-top:-6px; }
-  </style>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
 </head>
 <body class="portfolio">
-  <!-- ADMIN header -->
   <header class="site-header">
     <div class="brand">
       <img src="{% static 'images/logo_investr.io.png' %}" alt="InvestR.io Logo" class="site-logo" />
@@ -59,18 +22,16 @@
   </header>
 
   <main class="wrap">
-    <section class="admin-card">
+    <section class="admin-card form-card">
       <h2>Change Market Hours</h2>
-
-      <form id="hoursForm" class="grid-form" novalidate>
-        <label for="days">New Market Schedule</label>
-        <input id="days" class="input" type="text" placeholder="e.g., Mon–Fri" />
-
+      
+      <form id="hoursForm" class="grid-form hours-form" novalidate>
+        <label for="schedule">New Market Schedule</label>
+        <input id="schedule" class="input" type="text" placeholder="e.g., Mon–Fri" value="Mon–Fri" />
         <span class="hint">Describe trading days (e.g., <em>Mon–Fri</em> or <em>Mon–Sat</em>).</span>
-
+        
         <label for="hours">New Market Hours</label>
         <input id="hours" class="input" type="text" placeholder="HH:MM–HH:MM (24h)" />
-
         <span class="hint">Use 24-hour format like <em>09:30–16:00</em>.</span>
       </form>
 
@@ -80,71 +41,131 @@
       </div>
 
       <div id="ok" class="ok">Market schedule updated successfully.</div>
-      <div id="warn" class="warn">Invalid input. Use days like “Mon–Fri” and hours like “09:30–16:00”.</div>
+      <div id="warn" class="warn">Invalid input. Use days like "Mon–Fri" and hours like "09:30–16:00".</div>
     </section>
   </main>
 
+  <script src="{% static 'js/admin.js' %}"></script>
   <script>
-    const $ = id => document.getElementById(id);
-    const daysEl = $('days');
+    // Get form elements
+    const scheduleEl = $('schedule');
     const hoursEl = $('hours');
+    const updateBtn = $('updateBtn');
+    const cancelBtn = $('cancelBtn');
     const ok = $('ok');
     const warn = $('warn');
 
-    // Very simple patterns you can tighten later
-    // Days: letters and separators (Mon–Fri, Mon-Fri, Mon to Fri)
-    const daysRe  = /^[A-Za-z\s–\-to,]+$/;
-    // Hours: HH:MM–HH:MM (24h), allows 00–23 + 00–59
+    const localClearAlerts = () => clearAlerts(warn, ok);
+
+    // Validation patterns
+    const scheduleRe = /^[A-Za-z\s–\-to,]+$/;
     const hoursRe = /^(?:[01]\d|2[0-3]):[0-5]\d[–-](?:[01]\d|2[0-3]):[0-5]\d$/;
 
-    function clearAlerts(){ ok.style.display = 'none'; warn.style.display = 'none'; }
-
-    function validate(){
-      const d = daysEl.value.trim();
-      const h = hoursEl.value.trim();
-      if (!d || !h) return false;
-      if (!daysRe.test(d)) return false;
-
+    function validate() {
+      const schedule = scheduleEl.value.trim();
+      const hours = hoursEl.value.trim();
+      
+      if (!schedule || !hours) {
+        return { valid: false, error: 'Both fields are required.' };
+      }
+      
+      if (!scheduleRe.test(schedule)) {
+        return { valid: false, error: 'Invalid schedule format.' };
+      }
+      
       // Normalize en-dash / hyphen
-      const hoursNorm = h.replace('-', '–');
-      if (!hoursRe.test(hoursNorm)) return false;
-
-      // Ensure open < close (simple lexical works with 24h HH:MM strings)
+      const hoursNorm = hours.replace('-', '–');
+      if (!hoursRe.test(hoursNorm)) {
+        return { valid: false, error: 'Invalid hours format. Use HH:MM–HH:MM.' };
+      }
+      
+      // Ensure open < close
       const [open, close] = hoursNorm.split('–');
-      if (open >= close) return false;
-
-      return true;
+      if (open >= close) {
+        return { valid: false, error: 'Closing time must be after opening time.' };
+      }
+      
+      return { valid: true, data: { schedule, hours: hoursNorm } };
     }
 
-    function save(schedule, hours){
-      // TODO: replace with real API call
-      console.log('Saving market hours:', { schedule, hours });
+    // Parse hours string into components (09:30–16:00 → 9, 30, 16, 0)
+    function parseHours(hoursStr) {
+      const [openTime, closeTime] = hoursStr.split('–');
+      const [openH, openM] = openTime.split(':').map(Number);
+      const [closeH, closeM] = closeTime.split(':').map(Number);
+      return { openH, openM, closeH, closeM };
     }
 
-    $('updateBtn').addEventListener('click', (e) => {
+    updateBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      clearAlerts();
+      localClearAlerts();
 
-      if (!validate()){
+      const result = validate();
+
+      if (!result.valid) {
+        warn.textContent = result.error;
         warn.style.display = 'block';
         return;
       }
 
-      const schedule = daysEl.value.trim();
-      const hours = hoursEl.value.trim().replace('-', '–');
+      const { schedule, hours } = result.data;
+      const { openH, openM, closeH, closeM } = parseHours(hours);
 
-      save(schedule, hours);
+      updateBtn.disabled = true;
+      updateBtn.textContent = 'Updating...';
 
-      ok.textContent = `Market schedule set to ${schedule}, ${hours}.`;
-      ok.style.display = 'block';
+      // Send to backend API
+      fetch('/api/v1/admin/market_hours/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          open_hour: openH,
+          open_minute: openM,
+          close_hour: closeH,
+          close_minute: closeM
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          ok.textContent = `Market schedule set to ${schedule}, ${hours}.`;
+          ok.style.display = 'block';
+        } else {
+          warn.textContent = data.error || 'Failed to update market hours.';
+          warn.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        warn.textContent = 'Network error. Please try again.';
+        warn.style.display = 'block';
+        console.error('Error:', error);
+      })
+      .finally(() => {
+        updateBtn.disabled = false;
+        updateBtn.textContent = 'Update';
+      });
     });
 
-    $('cancelBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      clearAlerts();
-      daysEl.value = '';
+    cancelBtn.addEventListener('click', () => {
+      localClearAlerts();
+      scheduleEl.value = 'Mon–Fri';
       hoursEl.value = '';
     });
+
+    // Load current hours on page load
+    fetch('/api/v1/market-status/')
+      .then(response => response.json())
+      .then(data => {
+        if (data.open_time && data.close_time) {
+          hoursEl.value = `${data.open_time}–${data.close_time}`;
+        }
+      })
+      .catch(error => {
+        console.error('Error loading current hours:', error);
+      });
   </script>
 </body>
 </html>

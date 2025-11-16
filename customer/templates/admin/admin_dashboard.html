@@ -5,53 +5,7 @@
     <meta charset="UTF-8" />
     <title>ADMIN • Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
-    <style>
-        .admin-card {
-            max-width: 640px;
-            margin: 60px auto;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,.15);
-            padding: 40px;
-            text-align: center;
-        }
-        .admin-card h2 {
-            margin: 0 0 24px;
-            color: var(--ink);
-        }
-        .construction-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-        }
-        .construction-message {
-            font-size: 1.2rem;
-            color: var(--primary);
-            padding: 20px;
-            border: 2px dashed var(--primary);
-            border-radius: 8px;
-            margin: 24px 0;
-        }
-        .admin-links {
-            margin-top: 32px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .admin-links a {
-            text-decoration: none;
-            color: var(--primary);
-            font-weight: 600;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            transition: background .15s;
-        }
-        .admin-links a:hover {
-            background: var(--surface);
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
 </head>
 <body class="portfolio">
     <header class="site-header">
@@ -68,7 +22,7 @@
     </header>
     
     <main class="wrap">
-        <div class="admin-card">
+        <div class="admin-card dashboard-card">
             <div class="construction-icon">🚧</div>
             <h2>Administrator Dashboard</h2>
             

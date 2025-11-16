@@ -83,6 +83,21 @@
     </nav>
   </header>
 
+  <!-- Market Status Banner -->
+<div class="market-status-wrap">
+  {% if market_status.is_open %}
+    <div class="market-status open">
+      <span class="market-status-icon">[OPEN]</span>
+      Market Open - Trading hours: {{ market_status.open_time }} - {{ market_status.close_time }}
+    </div>
+  {% else %}
+    <div class="market-status closed">
+      <span class="market-status-icon">[CLOSED]</span>
+      Market Closed - {{ market_status.message }}
+    </div>
+  {% endif %}
+</div>
+
   <main class="wrap">
     <section class="sell-card">
       <h2>Sell Stock</h2>

@@ -5,38 +5,7 @@
   <meta charset="UTF-8" />
   <title>ADMIN • Create Stock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="{% static 'css/portfolio.css' %}" />
-  <style>
-    .admin-card{
-      max-width: 720px; margin: 24px auto;
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.15);
-      padding: 24px;
-    }
-    .admin-card h2{ margin:0 0 16px; }
-    .grid-form{ display:grid; grid-template-columns: 200px 1fr; gap: 12px 16px; align-items:center; }
-    .grid-form label{ font-weight:600; }
-    .input{
-      width:100%; padding:12px 14px; border:1px solid #cbd5e1; border-radius:8px;
-      background: var(--surface); outline:none; font-size:1rem; box-sizing:border-box;
-      transition: box-shadow .15s, border-color .15s;
-    }
-    .input:focus{ border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
-    .btn-row{ display:flex; gap:12px; margin-top: 12px; }
-    .btn{
-      padding:12px 16px; background: var(--primary); color:#fff; border:0; border-radius:8px;
-      font-weight:700; cursor:pointer; transition: background .15s, transform .02s;
-    }
-    .btn:hover{ background: var(--primary-600); }
-    .btn:active{ transform: translateY(1px); }
-    .btn[disabled]{ opacity:.5; cursor:not-allowed; }
-    .btn.secondary{ background:#e5e7eb; color:#111827; }
-    .warn, .ok{
-      margin-top:12px; padding:10px 12px; border-radius:8px; display:none;
-    }
-    .warn{ color:#b91c1c; background:#fee2e2; border:1px solid #fecaca; }
-    .ok{ color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; }
-  </style>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
 </head>
 <body class="portfolio">
   <header class="site-header">
@@ -53,7 +22,7 @@
   </header>
   
   <main class="wrap">
-    <section class="admin-card">
+    <section class="admin-card form-card">
       <h2>Create New Stock</h2>
       <form id="createForm" class="grid-form" novalidate>
         <label for="name">Stock Name</label>
@@ -65,8 +34,20 @@
         <label for="price">Starting Price ($)</label>
         <input id="price" class="input" type="number" min="0.01" step="0.01" placeholder="e.g., 190.00" required />
         
-        <label for="volume">Float Shares</label>
-        <input id="volume" class="input" type="number" min="1" step="1" placeholder="e.g., 1000000" required />
+        <label for="volume">Initial Volume</label>
+        <input id="volume" class="input" type="number" min="1" step="1" placeholder="e.g., 1000000" />
+        
+        <label for="status">Status</label>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="status" value="Active" id="statusActive" checked style="width: auto; height: 18px; width: 18px; cursor: pointer;" />
+            <span>Active</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="status" value="Inactive" id="statusInactive" style="width: auto; height: 18px; width: 18px; cursor: pointer;" />
+            <span>Inactive</span>
+          </label>
+        </div>
       </form>
       
       <div class="btn-row">
@@ -78,146 +59,114 @@
       <div id="ok" class="ok"></div>
     </section>
   </main>
-
+  
+  <script src="{% static 'js/admin.js' %}"></script>
   <script>
-    const $ = id => document.getElementById(id);
-    
+    // Get form elements
     const nameEl = $('name');
     const tickerEl = $('ticker');
     const priceEl = $('price');
     const volumeEl = $('volume');
+    const statusActiveEl = $('statusActive');
+    const statusInactiveEl = $('statusInactive');
     const createBtn = $('createBtn');
     const cancelBtn = $('cancelBtn');
     const warn = $('warn');
     const ok = $('ok');
     
-    function clearAlerts() {
-      warn.style.display = 'none';
-      ok.style.display = 'none';
-    }
+    const localClearAlerts = () => clearAlerts(warn, ok);
     
     function clearForm() {
-      nameEl.value = '';
-      tickerEl.value = '';
-      priceEl.value = '';
-      volumeEl.value = '';
+        nameEl.value = '';
+        tickerEl.value = '';
+        priceEl.value = '';
+        volumeEl.value = '';
+        statusActiveEl.checked = true;
     }
     
     function validate() {
-      const name = nameEl.value.trim();
-      const ticker = tickerEl.value.trim().toUpperCase();
-      const price = parseFloat(priceEl.value);
-      const volume = parseInt(volumeEl.value);
-      
-      if (!name || !ticker || !price || !volume) {
-        return { valid: false, error: 'All fields are required.' };
-      }
-      
-      if (ticker.length < 1 || ticker.length > 10) {
-        return { valid: false, error: 'Ticker must be 1-10 characters.' };
-      }
-      
-      if (price <= 0) {
-        return { valid: false, error: 'Price must be greater than $0.00.' };
-      }
-      
-      if (volume < 1) {
-        return { valid: false, error: 'Float shares must be at least 1.' };
-      }
-      
-      return { valid: true, data: { name, ticker, price, volume } };
+        const name = nameEl.value.trim();
+        const ticker = tickerEl.value.trim().toUpperCase();
+        const price = parseFloat(priceEl.value);
+        const volume = parseInt(volumeEl.value) || 0;
+        const status = statusActiveEl.checked ? 'Active' : 'Inactive';
+        
+        if (!name || !ticker || !price) {
+            return { valid: false, error: 'Stock Name, Ticker, and Price are required.' };
+        }
+        
+        if (ticker.length < 1 || ticker.length > 10) {
+            return { valid: false, error: 'Ticker must be 1-10 characters.' };
+        }
+        
+        if (price <= 0) {
+            return { valid: false, error: 'Price must be greater than $0.00.' };
+        }
+        
+        return { valid: true, data: { name, ticker, price, volume, status } };
     }
     
     createBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      clearAlerts();
-      
-      const result = validate();
-      
-      if (!result.valid) {
-        warn.textContent = result.error;
-        warn.style.display = 'block';
-        return;
-      }
-      
-      const { name, ticker, price, volume } = result.data;
-      
-      createBtn.disabled = true;
-      createBtn.textContent = 'Creating...';
-      
-      // TODO: Replace with actual API endpoint
-      console.log('Creating stock:', { name, ticker, price, volume });
-      
-      // Simulate API call - remove this timeout when needed.
-      /*setTimeout(() => {
-        ok.textContent = `Stock ${ticker} created successfully and is ready for trading.`;
-        ok.style.display = 'block';
-        clearForm();
-        createBtn.disabled = false;
-        createBtn.textContent = 'Create Stock';
-      }, 500); */
-      
-      // When backend is ready, replace setTimeout above with this:
-      fetch('/api/v1/admin/create_stock/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ 
-          company_name: name, 
-          ticker: ticker, 
-          current_price: price, 
-          float_shares: volume 
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          ok.textContent = `Stock ${ticker} created successfully.`;
-          ok.style.display = 'block';
-          clearForm();
-        } else {
-          warn.textContent = data.error || 'Failed to create stock.';
-          warn.style.display = 'block';
+        e.preventDefault();
+        localClearAlerts();
+        
+        const result = validate();
+        
+        if (!result.valid) {
+            warn.textContent = result.error;
+            warn.style.display = 'block';
+            return;
         }
-      })
-      .catch(error => {
-        warn.textContent = 'Network error. Please try again.';
-        warn.style.display = 'block';
-      })
-      .finally(() => {
-        createBtn.disabled = false;
-        createBtn.textContent = 'Create Stock';
-      });
-      
+        
+        const { name, ticker, price, volume, status } = result.data;
+        
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+        
+        fetch('/api/v1/admin/create_stock/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ 
+                company_name: name, 
+                ticker: ticker, 
+                current_price: price, 
+                float_shares: volume || 1000000  // Default to 1M if not provided
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                ok.textContent = `Stock ${ticker} created successfully with ${status} status.`;
+                ok.style.display = 'block';
+                clearForm();
+            } else {
+                warn.textContent = data.error || 'Failed to create stock.';
+                warn.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            warn.textContent = 'Network error. Please try again.';
+            warn.style.display = 'block';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create Stock';
+        });
     });
     
     cancelBtn.addEventListener('click', () => {
-      clearAlerts();
-      clearForm();
+        localClearAlerts();
+        clearForm();
     });
     
     // Auto-uppercase ticker
     tickerEl.addEventListener('input', () => {
-      tickerEl.value = tickerEl.value.toUpperCase();
+        tickerEl.value = tickerEl.value.toUpperCase();
     });
-    
-    // Helper for CSRF token
-    function getCookie(name) {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
   </script>
 </body>
 </html>

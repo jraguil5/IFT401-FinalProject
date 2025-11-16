@@ -81,6 +81,21 @@
       <a href="{% url 'sign_out' %}">Logout</a>
     </nav>
   </header>
+  
+<!-- Market Status Banner -->
+<div class="market-status-wrap">
+  {% if market_status.is_open %}
+    <div class="market-status open">
+      <span class="market-status-icon">[OPEN]</span>
+      Market Open - Trading hours: {{ market_status.open_time }} - {{ market_status.close_time }}
+    </div>
+  {% else %}
+    <div class="market-status closed">
+      <span class="market-status-icon">[CLOSED]</span>
+      Market Closed - {{ market_status.message }}
+    </div>
+  {% endif %}
+</div>
 
   <main class="wrap">
     <section class="buy-card">
@@ -94,15 +109,36 @@
       </form>
 
       <div class="field">
-        <label for="stock">Select Stock</label>
-        <select id="stock" class="select">
-          <option value="" selected disabled>Choose a stock</option>
-          {% for stock in stocks %}
-          <option value="{{ stock.current_price }}" data-ticker="{{ stock.ticker }}">{{ stock.ticker }} — {{ stock.company_name }}</option>
-          {% endfor %}
-        </select>
-        <div class="meta">Current Price: <span id="priceDisplay">$0.00</span></div>
-      </div>
+  <label for="stock">Select Stock</label>
+  <select id="stock" class="select">
+    <option value="" selected disabled>Choose a stock</option>
+    {% for stock in stocks %}
+    <option value="{{ stock.current_price }}" 
+            data-ticker="{{ stock.ticker }}"
+            data-opening="{{ stock.opening_price }}"
+            data-high="{{ stock.day_high }}"
+            data-low="{{ stock.day_low }}"
+            data-volume="{{ stock.float_shares }}"
+            data-name="{{ stock.name }}">
+      {{ stock.ticker }} — {{ stock.name }}
+    </option>
+    {% endfor %}
+  </select>
+  
+  <!-- Stock Details Display -->
+<div id="stockDetails" style="display:none; margin-top: 12px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+  <div style="font-weight: 600; margin-bottom: 8px; color: #0f172a;">
+    <span id="stockName">-</span> (<span id="stockTicker">-</span>)
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem; color: #374151;">
+    <div><strong>Current Price:</strong> <span id="priceDisplay">$0.00</span></div>
+    <div><strong>Opening Price:</strong> <span id="openingPrice">$0.00</span></div>
+    <div><strong>Day High:</strong> <span id="dayHigh">$0.00</span></div>
+    <div><strong>Day Low:</strong> <span id="dayLow">$0.00</span></div>
+    <div><strong>Float Shares:</strong> <span id="floatShares">0</span></div>
+    <div><strong>Market Cap:</strong> <span id="marketCap">$0.00</span></div>
+  </div>
+</div>
 
       <div class="field">
         <label for="shares">Number of Shares</label>
@@ -125,106 +161,6 @@
     </section>
   </main>
 
-  <script>
-    const select = document.getElementById('stock');
-    const shares = document.getElementById('shares');
-    const priceDisplay = document.getElementById('priceDisplay');
-    const estCost = document.getElementById('estCost');
-    const cashAvailEl = document.getElementById('cashAvail');
-    const buyBtn = document.getElementById('buyBtn');
-    const warnBalance = document.getElementById('warnBalance');
-    const statusMessage = document.getElementById('statusMessage');
-    const tradeForm = document.getElementById('tradeForm');
-    const tradeTickerInput = document.getElementById('tradeTickerBuy');
-    const tradeQuantityInput = document.getElementById('tradeQuantityBuy');
-
-    const initialCashString = cashAvailEl.textContent.replace('$', '').replace(/,/g, '');
-    let currentCash = parseFloat(initialCashString) || 0;
-    
-    const fmt = n => '$' + (Number(n).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    function updateCalculations() {
-      const price = parseFloat(select.value || 0);
-      const qty = parseInt(shares.value || 0, 10);
-      const total = price * qty;
-
-      priceDisplay.textContent = fmt(price);
-      estCost.textContent = fmt(total);
-      
-      cashAvailEl.textContent = fmt(currentCash);
-
-      const validSelection = price > 0;
-      const validQuantity = qty > 0;
-      const valid = validSelection && validQuantity;
-      const enoughCash = total <= currentCash;
-      
-      warnBalance.style.display = valid && !enoughCash ? 'block' : 'none';
-      buyBtn.disabled = !(valid && enoughCash);
-    }
-
-    select.addEventListener('change', updateCalculations);
-    shares.addEventListener('input', updateCalculations);
-    
-    buyBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        const price = parseFloat(select.value || 0);
-        const qty = parseInt(shares.value || 0, 10);
-        const ticker = select.options[select.selectedIndex]?.dataset?.ticker;
-        const total = price * qty;
-
-        if (total > currentCash || !ticker || qty <= 0) {
-            return;
-        }
-
-        tradeTickerInput.value = ticker;
-        tradeQuantityInput.value = qty;
-        
-        buyBtn.disabled = true;
-        buyBtn.textContent = 'Processing...';
-        statusMessage.textContent = 'Executing order...';
-        statusMessage.style.display = 'block';
-
-        fetch(tradeForm.action, {
-            method: 'POST',
-            body: new FormData(tradeForm),
-        })
-        .then(response => response.json().then(data => ({ status: response.status, body: data })))
-        .then(({ status, body }) => {
-            if (status === 200) {
-                currentCash = parseFloat(body.new_cash);
-                statusMessage.className = 'warn';
-                statusMessage.style.color = 'darkgreen';
-                statusMessage.style.background = '#dcfce7';
-                statusMessage.style.borderColor = '#bbf7d0';
-                statusMessage.textContent = body.message + `. New Cash: ${fmt(currentCash)}`;
-                shares.value = ''; 
-            } else {
-                statusMessage.className = 'warn';
-                statusMessage.style.color = '#b91c1c';
-                statusMessage.style.background = '#fee2e2';
-                statusMessage.style.borderColor = '#fecaca';
-                statusMessage.textContent = body.error || `Trade failed with status ${status}.`;
-            }
-        })
-        .catch(error => {
-            statusMessage.className = 'warn';
-            statusMessage.style.color = '#b91c1c';
-            statusMessage.style.background = '#fee2e2';
-            statusMessage.style.borderColor = '#fecaca';
-            statusMessage.textContent = 'A network error occurred. Please try again.';
-            console.error('Error:', error);
-        })
-        .finally(() => {
-            buyBtn.textContent = 'Execute Buy Order';
-            shares.value = '';
-            updateCalculations(); 
-            setTimeout(() => {
-            }, 5000);
-        });
-    });
-
-    updateCalculations();
-  </script>
+<script src="{% static 'js/buy_stock.js' %}"></script>
 </body>
 </html>

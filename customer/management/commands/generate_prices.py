@@ -1,33 +1,55 @@
 import random
 from decimal import Decimal, ROUND_HALF_UP
 from django.core.management.base import BaseCommand
-from django.db import transaction, models
+from django.db import transaction
+from django.db.models import Max
 from customer.models import Stock, PriceTick
 
-class Command(BaseCommand):
-    help = "Update stock prices with random changes"
 
+class Command(BaseCommand):
+    help = "Update stock prices with random fluctuations"
+    
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--volatility',
+            type=float,
+            default=0.5,
+            help='Price change percentage (default: 0.5%)'
+        )
+    
     def handle(self, *args, **options):
+        volatility = options['volatility'] / 100  # Convert to decimal
+        
+        stocks = Stock.objects.all()
+        if not stocks:
+            self.stdout.write("No stocks to update")
+            return
+        
         with transaction.atomic():
-            stocks = Stock.objects.all()
-            
-            if not stocks.exists():
-                self.stdout.write("No stocks found")
-                return
-            
-            last_tick = PriceTick.objects.aggregate(models.Max("id"))["id__max"]
-            next_tick_id = (last_tick or 5_000_000_000) + 1
+            # Get next tick ID
+            last_tick_id = PriceTick.objects.aggregate(Max('id'))['id__max']
+            next_tick_id = (last_tick_id or 5_000_000_000) + 1
             
             ticks = []
+            updated = 0
             
             for stock in stocks:
-                # ±0.5% change
-                factor = Decimal(str(random.uniform(-0.005, 0.005)))
-                new_price = stock.current_price * (1 + factor)
-                new_price = max(new_price, Decimal("0.01")).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+                # Random price change within volatility range
+                change = Decimal(str(random.uniform(-volatility, volatility)))
+                new_price = stock.current_price * (1 + change)
+                
+                # Don't go below $0.01
+                new_price = max(new_price, Decimal("0.01"))
+                new_price = new_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                
+                # Update day high/low
+                if new_price > stock.day_high:
+                    stock.day_high = new_price
+                if new_price < stock.day_low:
+                    stock.day_low = new_price
                 
                 stock.current_price = new_price
-                stock.save(update_fields=["current_price"])
+                stock.save(update_fields=['current_price', 'day_high', 'day_low'])
                 
                 ticks.append(PriceTick(
                     id=next_tick_id,
@@ -35,9 +57,10 @@ class Command(BaseCommand):
                     price=new_price
                 ))
                 next_tick_id += 1
+                updated += 1
             
             PriceTick.objects.bulk_create(ticks)
             
             self.stdout.write(
-                f"Updated {len(stocks)} stocks, created {len(ticks)} ticks"
+                self.style.SUCCESS(f"Updated {updated} stocks")
             )
