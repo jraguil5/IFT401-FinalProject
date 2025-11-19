@@ -1,4 +1,3 @@
-import random
 from decimal import Decimal, ROUND_HALF_UP
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -26,7 +25,7 @@ class Command(BaseCommand):
         
         with transaction.atomic():
             # Figure out next PriceTick ID - start at 5 billion if none exist
-            last_tick_id = PriceTick.objects.aggregate(Max('id'))['id__max']
+            last_tick_id = PriceTick.objects.aggregate(Max('TickID'))['TickID__max']
             next_tick_id = (last_tick_id or 5_000_000_000) + 1
             
             ticks = []
@@ -48,7 +47,7 @@ class Command(BaseCommand):
                 stock.save(update_fields=['current_price', 'day_high', 'day_low'])
                 
                 ticks.append(PriceTick(
-                    id=next_tick_id,
+                    TickID=next_tick_id,  # CHANGED FROM id
                     stock=stock,
                     price=new_price
                 ))
