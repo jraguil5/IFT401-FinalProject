@@ -559,28 +559,21 @@ def get_market_status_api(request):
 @login_required
 @require_http_methods(["POST"])
 def admin_generate_prices(request):
-    """API endpoint to trigger price generation"""
     
-    # Check if user is admin
-    if request.user.role != 'admin':
+    if request.user.Role != 'ADMIN':
         return JsonResponse({
             'error': 'Unauthorized. Admin access required.'
         }, status=403)
     
     try:
-        # Capture command output
         old_stdout = sys.stdout
         sys.stdout = buffer = io.StringIO()
         
-        # Run the management command
         call_command('generate_prices')
-        
-        # Restore stdout and get output
+
         sys.stdout = old_stdout
         output = buffer.getvalue()
         
-        # Count updated stocks
-        from customer.models import Stock
         stock_count = Stock.objects.count()
         
         return JsonResponse({
