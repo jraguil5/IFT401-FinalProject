@@ -9,8 +9,8 @@ from customer.views import (
     portfolio_view, buy_stock_view, sell_stock_view, 
     deposit_cash_view, withdraw_cash_view, 
     admin_change_market_hours_view, admin_create_stock_view,
-    role_based_redirect, sign_out_user, admin_create_stock_api,  admin_update_market_hours, 
-    get_market_status_api,       
+    role_based_redirect, sign_out_user, admin_create_stock_api, admin_update_market_hours, 
+    get_market_status_api,admin_generate_prices,       
 )
 
 router = DefaultRouter()
@@ -47,7 +47,9 @@ urlpatterns = [
     
     # Admin APIs
     path('api/v1/admin/create_stock/', admin_create_stock_api, name='api_admin_create_stock'),
-    path('api/v1/admin/market_hours/', admin_update_market_hours, name='api_admin_market_hours'), 
+    path('api/v1/admin/market_hours/', admin_update_market_hours, name='api_admin_market_hours'),
+    path('api/v1/admin/generate_prices/',admin_generate_prices, name='api_admin_generate_prices'),
+ 
     
     # Market status API (available to all authenticated users)
     path('api/v1/market-status/', get_market_status_api, name='api_market_status'),

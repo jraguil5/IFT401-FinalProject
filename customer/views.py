@@ -6,11 +6,15 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from decimal import Decimal, InvalidOperation
 from .utils import is_market_open, get_market_status
+from django.core.management import call_command
+import io
+import sys
 
 from .models import BrokerageAccount, CustomUser, Transaction, Stock, Order, Trade, Position
 from .serializers import (
@@ -552,3 +556,41 @@ def get_market_status_api(request):
     status_data = get_market_status()
     return Response(status_data)
 
+@login_required
+@require_http_methods(["POST"])
+def admin_generate_prices(request):
+    """API endpoint to trigger price generation"""
+    
+    # Check if user is admin
+    if request.user.role != 'admin':
+        return JsonResponse({
+            'error': 'Unauthorized. Admin access required.'
+        }, status=403)
+    
+    try:
+        # Capture command output
+        old_stdout = sys.stdout
+        sys.stdout = buffer = io.StringIO()
+        
+        # Run the management command
+        call_command('generate_prices')
+        
+        # Restore stdout and get output
+        sys.stdout = old_stdout
+        output = buffer.getvalue()
+        
+        # Count updated stocks
+        from customer.models import Stock
+        stock_count = Stock.objects.count()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully updated prices for {stock_count} stocks',
+            'details': output
+        })
+        
+    except Exception as e:
+        sys.stdout = old_stdout
+        return JsonResponse({
+            'error': f'Failed to generate prices: {str(e)}'
+        }, status=500)

@@ -1,5 +1,4 @@
 // Buy Stock Page - Handles stock selection, calculation, and purchase
-// Written by: InvestR.io Team
 console.log('buy_stock.js loaded!');
 // Get DOM elements
 const stockSelect = document.getElementById('stock');
