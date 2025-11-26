@@ -142,121 +142,119 @@
       
       <div id="statusMessage" class="warn" style="display:none; color: var(--primary); background: #eff6ff; border: 1px solid #bfdbfe;"></div>
 
-      <button id="sellBtn" class="btn" disabled>Execute Sell Order</button>
+      <button id="reviewSellBtn" class="btn" disabled>Review Order</button>
       <div id="warnShares" class="warn">Insufficient shares to complete this trade.</div>
     </section>
   </main>
 
-  <script>
-    const select = document.getElementById('stock');
-    const shares = document.getElementById('shares');
-    const holdingEl = document.getElementById('holding');
-    const proceedsEl = document.getElementById('proceeds');
-    const priceDisplayEl = document.getElementById('priceDisplaySell');
-    const cashAvailEl = document.getElementById('cashAvail');
-    const sellBtn = document.getElementById('sellBtn');
-    const warnShares = document.getElementById('warnShares');
-    const statusMessage = document.getElementById('statusMessage');
-    const tradeForm = document.getElementById('tradeForm');
-    const tradeTickerInput = document.getElementById('tradeTickerSell');
-    const tradeQuantityInput = document.getElementById('tradeQuantitySell');
+  <div id="sellConfirmModal" class="modal" style="display: none;">
+    <div class="modal-overlay" id="sellModalOverlay"></div>
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h2>Review Your Sale</h2>
+        </div>
+        <div class="modal-body">
+            <div id="sellOrderSummary" class="order-summary"></div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelSellBtn" class="btn-cancel">Cancel Order</button>
+            <button id="confirmSellBtn" class="btn-confirm">Confirm Sale</button>
+        </div>
+    </div>
+</div>
 
-    const initialCashString = cashAvailEl.textContent.replace('$', '').replace(/,/g, '');
-    let currentCash = parseFloat(initialCashString) || 0;
+<style>
+/* Order Confirmation Popup */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
 
-    const fmt = n => '$' + (Number(n).toFixed(2)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
 
-    function getSelectedData() {
-        const selectedOption = select.options[select.selectedIndex];
-        return {
-            price: parseFloat(selectedOption.value || 0),
-            ticker: selectedOption.dataset?.ticker || null,
-            held: parseInt(selectedOption.dataset?.held || 0, 10),
-            qty: parseInt(shares.value || 0, 10)
-        };
-    }
+.modal-dialog {
+    position: relative;
+    background: white;
+    max-width: 500px;
+    margin: 100px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+}
 
-    function updateCalculations() {
-        const { price, held, qty } = getSelectedData();
-        const total = price * qty;
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    background: #f5f5f5;
+}
 
-        holdingEl.textContent = held;
-        priceDisplayEl.textContent = fmt(price);
-        proceedsEl.textContent = fmt(total);
-        cashAvailEl.textContent = fmt(currentCash);
+.modal-header h2 {
+    margin: 0;
+    color: #2c5f2d;
+}
 
-        const validSelection = price > 0;
-        const validQuantity = qty > 0;
-        const valid = validSelection && validQuantity;
-        const enoughShares = qty <= held;
+.modal-body {
+    padding: 20px;
+}
 
-        warnShares.style.display = valid && !enoughShares ? 'block' : 'none';
-        sellBtn.disabled = !(valid && enoughShares);
+.order-summary {
+    background: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 
-        shares.setAttribute('max', held);
-    }
+.order-summary p {
+    margin: 10px 0;
+    font-size: 16px;
+}
 
-    select.addEventListener('change', () => {
-        shares.value = ''; 
-        updateCalculations();
-    });
-    shares.addEventListener('input', updateCalculations);
+.order-total {
+    font-weight: bold;
+    font-size: 18px;
+    color: #2c5f2d;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #2c5f2d;
+}
 
-    sellBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        const { price, held, qty, ticker } = getSelectedData();
-        const total = price * qty;
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #ddd;
+    text-align: right;
+}
 
-        if (qty > held || !ticker || qty <= 0) {
-            return;
-        }
+.btn-cancel, .btn-confirm {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+}
 
-        tradeTickerInput.value = ticker;
-        tradeQuantityInput.value = qty;
-        
-        sellBtn.disabled = true;
-        sellBtn.textContent = 'Processing...';
-        statusMessage.textContent = 'Executing order...';
-        statusMessage.style.display = 'block';
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+}
 
-        
-        fetch(tradeForm.action, {
-            method: 'POST',
-            body: new FormData(tradeForm),
-        })
-        .then(response => response.json().then(data => ({ status: response.status, body: data })))
-        .then(({ status, body }) => {
-            if (status === 200) {
-                currentCash = parseFloat(body.new_cash);
-                statusMessage.className = 'warn';
-                statusMessage.style.color = 'darkgreen';
-                statusMessage.style.background = '#dcfce7';
-                statusMessage.style.borderColor = '#bbf7d0';
-                statusMessage.textContent = body.message + `. New Cash: ${fmt(currentCash)}`;
-            } else {
-                statusMessage.className = 'warn';
-                statusMessage.style.color = '#b91c1c';
-                statusMessage.style.background = '#fee2e2';
-                statusMessage.style.borderColor = '#fecaca';
-                statusMessage.textContent = body.error || `Trade failed with status ${status}.`;
-            }
-        })
-        .catch(error => {
-            statusMessage.className = 'warn';
-            statusMessage.style.color = '#b91c1c';
-            statusMessage.style.background = '#fee2e2';
-            statusMessage.style.borderColor = '#fecaca';
-            statusMessage.textContent = 'A network error occurred. Please try again.';
-            console.error('Error:', error);
-        })
-        .finally(() => {
-            sellBtn.textContent = 'Execute Sell Order';
-            shares.value = '';
-            updateCalculations();
-        });
-    });
-    updateCalculations();
-  </script>
+.btn-confirm {
+    background: #2c5f2d;
+    color: white;
+}
+</style>
+<script src="{% static 'js/sell_stock.js' %}"></script>
 </body>
 </html>
