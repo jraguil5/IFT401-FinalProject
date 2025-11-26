@@ -1,17 +1,25 @@
 // Buy Stock Page - Handles stock selection, calculation, and purchase
 console.log('buy_stock.js loaded!');
+
 // Get DOM elements
 const stockSelect = document.getElementById('stock');
 const sharesInput = document.getElementById('shares');
 const priceDisplay = document.getElementById('priceDisplay');
 const estimatedCost = document.getElementById('estCost');
 const cashDisplay = document.getElementById('cashAvail');
-const buyButton = document.getElementById('buyBtn');
+const reviewBuyBtn = document.getElementById('reviewBuyBtn');
 const balanceWarning = document.getElementById('warnBalance');
 const statusMsg = document.getElementById('statusMessage');
 const tradeForm = document.getElementById('tradeForm');
 const tickerInput = document.getElementById('tradeTickerBuy');
 const quantityInput = document.getElementById('tradeQuantityBuy');
+
+// Modal elements
+const buyConfirmModal = document.getElementById('buyConfirmModal');
+const confirmBuyBtn = document.getElementById('confirmBuyBtn');
+const cancelBuyBtn = document.getElementById('cancelBuyBtn');
+const buyModalOverlay = document.getElementById('buyModalOverlay');
+const buyOrderSummary = document.getElementById('buyOrderSummary');
 
 // Track user's cash balance
 const initialCash = cashDisplay.textContent.replace('$', '').replace(/,/g, '');
@@ -77,80 +85,143 @@ function calculate() {
   const hasFunds = total <= userCash;
   
   balanceWarning.style.display = (hasStock && hasQuantity && !hasFunds) ? 'block' : 'none';
-  buyButton.disabled = !(hasStock && hasQuantity && hasFunds);
+  reviewBuyBtn.disabled = !(hasStock && hasQuantity && hasFunds);
 }
 
-// Handle buy button click
-function executeBuy(e) {
-  e.preventDefault();
-  
-  const price = parseFloat(stockSelect.value || 0);
-  const qty = parseInt(sharesInput.value || 0);
-  const ticker = stockSelect.options[stockSelect.selectedIndex]?.dataset?.ticker;
-  const total = price * qty;
-  
-  // Validate before submitting
-  if (total > userCash || !ticker || qty <= 0) {
-    return;
-  }
-  
-  // Set form values
-  tickerInput.value = ticker;
-  quantityInput.value = qty;
-  
-  // Disable button and show processing
-  buyButton.disabled = true;
-  buyButton.textContent = 'Processing...';
-  statusMsg.textContent = 'Executing order...';
-  statusMsg.style.display = 'block';
-  
-  // Submit trade
-  fetch(tradeForm.action, {
-    method: 'POST',
-    body: new FormData(tradeForm),
-  })
-  .then(response => response.json().then(data => ({ 
-    status: response.status, 
-    body: data 
-  })))
-  .then(({ status, body }) => {
-    if (status === 200) {
-      // Success!
-      userCash = parseFloat(body.new_cash);
-      statusMsg.className = 'warn';
-      statusMsg.style.color = 'darkgreen';
-      statusMsg.style.background = '#dcfce7';
-      statusMsg.style.borderColor = '#bbf7d0';
-      statusMsg.textContent = body.message + ` New Cash: ${formatMoney(userCash)}`;
-      sharesInput.value = '';
-    } else {
-      // Failed
-      statusMsg.className = 'warn';
-      statusMsg.style.color = '#b91c1c';
-      statusMsg.style.background = '#fee2e2';
-      statusMsg.style.borderColor = '#fecaca';
-      statusMsg.textContent = body.error || `Trade failed`;
-    }
-  })
-  .catch(error => {
-    statusMsg.className = 'warn';
-    statusMsg.style.color = '#b91c1c';
-    statusMsg.style.background = '#fee2e2';
-    statusMsg.style.borderColor = '#fecaca';
-    statusMsg.textContent = 'Network error. Please try again.';
-    console.error('Error:', error);
-  })
-  .finally(() => {
-    buyButton.textContent = 'Execute Buy Order';
-    sharesInput.value = '';
-    calculate();
-  });
+// ==========================================
+// ORDER CONFIRMATION FEATURE
+// ==========================================
+
+// Review Order Button - Show Confirmation Modal
+if (reviewBuyBtn) {
+    reviewBuyBtn.addEventListener('click', function() {
+        const price = parseFloat(stockSelect.value || 0);
+        const qty = parseInt(sharesInput.value || 0);
+        const selected = stockSelect.options[stockSelect.selectedIndex];
+        const ticker = selected?.dataset?.ticker;
+        const name = selected?.dataset?.name;
+        const total = price * qty;
+        
+        // Validation
+        if (!ticker || qty <= 0 || total > userCash) {
+            return;
+        }
+        
+        // Build order summary
+        buyOrderSummary.innerHTML = `
+            <p><strong>Stock:</strong> <span>${ticker}</span></p>
+            <p><strong>Company:</strong> <span>${name}</span></p>
+            <p><strong>Quantity:</strong> <span>${qty} shares</span></p>
+            <p><strong>Price per Share:</strong> <span>${formatMoney(price)}</span></p>
+            <p class="order-total"><strong>Total Cost:</strong> <span>${formatMoney(total)}</span></p>
+        `;
+        
+        // Show modal
+        buyConfirmModal.style.display = 'block';
+    });
+}
+
+// Confirm Purchase Button - Execute Trade
+if (confirmBuyBtn) {
+    confirmBuyBtn.addEventListener('click', function() {
+        const price = parseFloat(stockSelect.value || 0);
+        const qty = parseInt(sharesInput.value || 0);
+        const ticker = stockSelect.options[stockSelect.selectedIndex]?.dataset?.ticker;
+        const total = price * qty;
+        
+        // Close modal
+        buyConfirmModal.style.display = 'none';
+        
+        // Validate
+        if (total > userCash || !ticker || qty <= 0) {
+            return;
+        }
+        
+        // Set form values
+        tickerInput.value = ticker;
+        quantityInput.value = qty;
+        
+        // Disable button and show processing
+        confirmBuyBtn.disabled = true;
+        confirmBuyBtn.textContent = 'Processing...';
+        reviewBuyBtn.disabled = true;
+        reviewBuyBtn.textContent = 'Processing...';
+        statusMsg.textContent = 'Executing order...';
+        statusMsg.style.display = 'block';
+        
+        // Submit trade
+        fetch(tradeForm.action, {
+            method: 'POST',
+            body: new FormData(tradeForm),
+        })
+        .then(response => response.json().then(data => ({ 
+            status: response.status, 
+            body: data 
+        })))
+        .then(({ status, body }) => {
+            if (status === 200) {
+                // Success!
+                userCash = parseFloat(body.new_cash);
+                statusMsg.className = 'warn';
+                statusMsg.style.color = 'darkgreen';
+                statusMsg.style.background = '#dcfce7';
+                statusMsg.style.borderColor = '#bbf7d0';
+                statusMsg.textContent = body.message + ` New Cash: ${formatMoney(userCash)}`;
+                sharesInput.value = '';
+            } else {
+                // Failed
+                statusMsg.className = 'warn';
+                statusMsg.style.color = '#b91c1c';
+                statusMsg.style.background = '#fee2e2';
+                statusMsg.style.borderColor = '#fecaca';
+                statusMsg.textContent = body.error || `Trade failed`;
+            }
+        })
+        .catch(error => {
+            statusMsg.className = 'warn';
+            statusMsg.style.color = '#b91c1c';
+            statusMsg.style.background = '#fee2e2';
+            statusMsg.style.borderColor = '#fecaca';
+            statusMsg.textContent = 'Network error. Please try again.';
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            confirmBuyBtn.disabled = false;
+            confirmBuyBtn.textContent = 'Confirm Purchase';
+            reviewBuyBtn.textContent = 'Review Order';
+            sharesInput.value = '';
+            calculate();
+        });
+    });
+}
+
+// Cancel Button - Close Modal
+if (cancelBuyBtn) {
+    cancelBuyBtn.addEventListener('click', function() {
+        buyConfirmModal.style.display = 'none';
+        statusMsg.className = 'warn';
+        statusMsg.style.color = '#0369a1';
+        statusMsg.style.background = '#e0f2fe';
+        statusMsg.style.borderColor = '#bae6fd';
+        statusMsg.textContent = 'Order cancelled';
+        statusMsg.style.display = 'block';
+        
+        setTimeout(() => {
+            statusMsg.style.display = 'none';
+        }, 3000);
+    });
+}
+
+// Close modal when clicking overlay
+if (buyModalOverlay) {
+    buyModalOverlay.addEventListener('click', function() {
+        buyConfirmModal.style.display = 'none';
+    });
 }
 
 // Set up event listeners
 stockSelect.addEventListener('change', calculate);
 sharesInput.addEventListener('input', calculate);
-buyButton.addEventListener('click', executeBuy);
 
 // Initial calculation
 calculate();
