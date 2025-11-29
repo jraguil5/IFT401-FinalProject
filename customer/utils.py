@@ -15,8 +15,10 @@ def is_market_open():
         if not schedule:
             return False, "Market schedule not configured"
         
-        if current_weekday >= 5:
-             return False, "Market is closed on weekends"
+        # REMOVED HARDCODED WEEKEND CHECK
+        # Weekend trading is now allowed for 24/7 demo operation , add back in the future. 
+        #if current_weekday >= 5:
+        #      return False, "Market is closed on weekends"
         
         # for holiday, can be added later
         #if schedule.Holiday:
